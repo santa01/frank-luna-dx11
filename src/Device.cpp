@@ -115,8 +115,6 @@ DX11Device::DX11Device(const Window& window)
     }
 
     {
-        m_D3D11DeviceContext->OMSetRenderTargets(1, &m_RenderTargetView, m_DepthStencilView); // Output Merger
-
         D3D11_VIEWPORT viewport{ };
         viewport.Width = static_cast<FLOAT>(window.GetWidth());
         viewport.Height = static_cast<FLOAT>(window.GetHeight());
@@ -124,6 +122,7 @@ DX11Device::DX11Device(const Window& window)
         viewport.MaxDepth = 1.0f;
 
         m_D3D11DeviceContext->RSSetViewports(1, &viewport); // Rasterizer Stage
+        m_D3D11DeviceContext->OMSetRenderTargets(1, &m_RenderTargetView, m_DepthStencilView); // Output Merger
     }
 }
 
