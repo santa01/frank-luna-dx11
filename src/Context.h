@@ -24,6 +24,7 @@
 
 #include "Window.h"
 #include "Device.h"
+#include "Signals.h"
 #include <memory>
 #include <string>
 
@@ -48,6 +49,12 @@ public:
 
     void Run();
     void Terminate();
+
+    Signal<Context&, unsigned int> OnKeyDown;
+    Signal<Context&, unsigned int> OnKeyUp;
+    Signal<Context&, unsigned int> OnMouseDown;
+    Signal<Context&, unsigned int> OnMouseUp;
+    Signal<Context&, int, int> OnMouseMove;
 
 private:
     Application* m_Application{ nullptr };

@@ -22,6 +22,7 @@
 
 #include "Window.h"
 #include "Context.h"
+#include <windowsx.h>
 #include <stdexcept>
 
 Window::Window(LPCSTR caption, LONG width, LONG height)
@@ -100,69 +101,41 @@ void Window::Update(Context& context)
 
 LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    Context* context = reinterpret_cast<Context*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    Context& context = *reinterpret_cast<Context*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     switch (uMsg)
     {
     case WM_KEYDOWN:
-    case WM_KEYUP:
     case WM_SYSKEYDOWN:
+    {
+        context.OnKeyDown(context, wParam);
+        return 0;
+    }
+
+    case WM_KEYUP:
     case WM_SYSKEYUP:
     {
-        //int virtualKey = static_cast<int>(wParam);
-        //KeyboardKey keyboardKey = Input::keycodeToKeyboardKey(virtualKey);
-
-        //if (keyboardKey != KeyboardKey::KEY_UNKNOWN) {
-        //    bool keyState = (message == WM_KEYDOWN || message == WM_SYSKEYDOWN);
-        //    self->keyboardState[keyboardKey] = keyState;
-        //    self->onKeyboardKeySignal(keyboardKey, keyState);
-        //}
-
+        context.OnKeyUp(context, wParam);
         return 0;
     }
 
     case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
     {
-        //bool mouseButtonState = (message == WM_LBUTTONDOWN);
-        //self->mouseState[MouseButton::BUTTON_LEFT] = mouseButtonState;
-        //self->onMouseButtonSignal(MouseButton::BUTTON_LEFT, mouseButtonState);
+        context.OnMouseDown(context, uMsg == WM_LBUTTONDOWN ? VK_LBUTTON : VK_RBUTTON);
         return 0;
     }
 
-    case WM_RBUTTONDOWN:
+    case WM_LBUTTONUP:
     case WM_RBUTTONUP:
     {
-        //bool mouseButtonState = (message == WM_RBUTTONDOWN);
-        //self->mouseState[MouseButton::BUTTON_RIGHT] = mouseButtonState;
-        //self->onMouseButtonSignal(MouseButton::BUTTON_RIGHT, mouseButtonState);
+        context.OnMouseUp(context, uMsg == WM_LBUTTONDOWN ? VK_LBUTTON : VK_RBUTTON);
         return 0;
     }
 
     case WM_MOUSEMOVE:
     {
-        //int xPosition = GET_X_LPARAM(lParam);
-        //int yPosition = GET_Y_LPARAM(lParam);
-        //bool mouseMoved = true;
-
-        //if (self->isMouseCaptured()) {
-        //    POINT windowCenter = { self->width >> 1, self->height >> 1 };
-        //    xPosition -= windowCenter.x;
-        //    yPosition -= windowCenter.y;
-
-        //    if (xPosition != 0 || yPosition != 0) {
-        //        self->warpMousePointer(windowCenter.x, windowCenter.y);
-        //    }
-        //    else {
-        //        mouseMoved = false;  // WM_MOUSEMOVE after SetCursorPos() to window center
-        //    }
-        //}
-
-        //if (mouseMoved) {
-        //    self->mousePosition = std::make_pair(xPosition, yPosition);
-        //    self->onMouseMotionSignal(xPosition, yPosition);
-        //}
-
+        context.OnMouseMove(context, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         return 0;
     }
 

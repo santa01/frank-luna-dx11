@@ -20,26 +20,50 @@
  * SOFTWARE.
  */
 
-#include "SignalSlot.h"
+#pragma once
 
-Slot::Slot(const Wrapper& wrapper)
-    : m_Wrapper(wrapper)
-{ }
+#include <functional>
+#include <vector>
 
-void Slot::operator ()()
+template <typename... Args>
+using Wrapper = std::function<void(Args...)>;
+
+template <typename... Args>
+class Slot final
 {
-    m_Wrapper();
-}
+public:
+    Slot(const Wrapper<Args...>& wrapper)
+        : m_Wrapper(wrapper)
+    { }
 
-void Signal::Connect(const Slot::Wrapper& wrapper)
-{
-    m_Slots.emplace_back(wrapper);
-}
-
-void Signal::operator ()()
-{
-    for (Slot& slot : m_Slots)
+    template <typename... CallArgs>
+    void operator ()(CallArgs&&... args)
     {
-        slot();
+        m_Wrapper(std::forward<CallArgs>(args)...);
     }
-}
+
+private:
+    Wrapper<Args...> m_Wrapper;
+};
+
+template <typename... Args>
+class Signal final
+{
+public:
+    void Connect(const Wrapper<Args...>& wrapper)
+    {
+        m_Slots.emplace_back(wrapper);
+    }
+
+    template <typename... CallArgs>
+    void operator ()(CallArgs&&... args)
+    {
+        for (Slot<Args...>& slot : m_Slots)
+        {
+            slot(std::forward<CallArgs>(args)...);
+        }
+    }
+
+private:
+    std::vector<Slot<Args...>> m_Slots;
+};

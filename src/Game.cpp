@@ -25,12 +25,33 @@
 
 void Game::Start(Context& context)
 {
+    context.OnKeyDown.Connect(std::bind(&Game::OnKeyDown, this, std::placeholders::_1, std::placeholders::_2));
+    context.OnKeyUp.Connect(std::bind(&Game::OnKeyUp, this, std::placeholders::_1, std::placeholders::_2));
+    context.OnMouseDown.Connect(std::bind(&Game::OnMouseDown, this, std::placeholders::_1, std::placeholders::_2));
+    context.OnMouseUp.Connect(std::bind(&Game::OnMouseUp, this, std::placeholders::_1, std::placeholders::_2));
+    context.OnMouseMove.Connect(std::bind(&Game::OnMouseMove, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }
 
 void Game::Shutdown(Context& context)
+{ }
+
+void Game::OnKeyDown(Context& context, unsigned int key)
 {
+    if (key == VK_ESCAPE)
+        context.Terminate();
 }
 
+void Game::OnKeyUp(Context& context, unsigned int key)
+{ }
+
+void Game::OnMouseDown(Context& context, unsigned int key)
+{ }
+
+void Game::OnMouseUp(Context& context, unsigned int key)
+{ }
+
+void Game::OnMouseMove(Context& context, int x, int y)
+{ }
+
 void Game::Update(Context& context)
-{
-}
+{ }

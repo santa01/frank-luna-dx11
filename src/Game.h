@@ -32,5 +32,11 @@ private:
     void Start(Context& context) override;
     void Shutdown(Context& context) override;
 
+    void OnKeyDown(Context& context, unsigned int key);
+    void OnKeyUp(Context& context, unsigned int key);
+    void OnMouseDown(Context& context, unsigned int key);
+    void OnMouseUp(Context& context, unsigned int key);
+    void OnMouseMove(Context& context, int x, int y);
+
     void Update(Context& context) override;
 };
