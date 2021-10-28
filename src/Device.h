@@ -24,6 +24,7 @@
 
 #include <d3d11.h>
 #include <dxgi1_2.h>
+#include <wrl/client.h>
 
 class Context;
 class Window;
@@ -38,11 +39,11 @@ public:
     void FrameEnd(Context& context);
 
 private:
-    ID3D11Device* m_D3D11Device{ nullptr };
-    ID3D11DeviceContext* m_D3D11DeviceContext{ nullptr };
-    IDXGISwapChain1* m_D3D11SwapChain{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D11Device> m_D3D11Device;
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_D3D11DeviceContext;
+    Microsoft::WRL::ComPtr<IDXGISwapChain1> m_D3D11SwapChain1;
 
-    ID3D11RenderTargetView* m_RenderTargetView{ nullptr };
-    ID3D11Texture2D* m_DepthStencilBuffer{ nullptr };
-    ID3D11DepthStencilView* m_DepthStencilView{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilBuffer;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
 };

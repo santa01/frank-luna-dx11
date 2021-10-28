@@ -46,53 +46,47 @@ DX11Device::DX11Device(const Window& window)
     {
         // https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_2/nn-dxgi1_2-idxgifactory2
 
-        IDXGIDevice2* pDXGIDevice = nullptr;
-        IDXGIAdapter* pDXGIAdapter = nullptr;
-        IDXGIFactory2* pIDXGIFactory = nullptr;
+        Microsoft::WRL::ComPtr<IDXGIDevice2> pDXGIDevice2;
+        Microsoft::WRL::ComPtr<IDXGIAdapter> pDXGIAdapter;
+        Microsoft::WRL::ComPtr<IDXGIFactory2> pIDXGIFactory2;
 
-        HRESULT hr = m_D3D11Device->QueryInterface(__uuidof(IDXGIDevice2), reinterpret_cast<void**>(&pDXGIDevice));
+        HRESULT hr = m_D3D11Device.As(&pDXGIDevice2);
         assert(SUCCEEDED(hr));
 
-        hr = pDXGIDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(&pDXGIAdapter));
+        hr = pDXGIDevice2->GetParent(IID_PPV_ARGS(&pDXGIAdapter));
         assert(SUCCEEDED(hr));
 
-        hr = pDXGIAdapter->GetParent(__uuidof(IDXGIFactory2), reinterpret_cast<void**>(&pIDXGIFactory));
+        hr = pDXGIAdapter->GetParent(IID_PPV_ARGS(&pIDXGIFactory2));
         assert(SUCCEEDED(hr));
 
-        DXGI_SWAP_CHAIN_DESC1 swapChainDesc{ };
-        swapChainDesc.Width = window.GetWidth();
-        swapChainDesc.Height = window.GetHeight();
-        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount = 2; // For DXGI_SWAP_EFFECT_FLIP_DISCARD
-        swapChainDesc.Scaling = DXGI_SCALING_NONE;
-        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-        swapChainDesc.SampleDesc.Count = 1;
-        swapChainDesc.SampleDesc.Quality = 0;
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc1{ };
+        swapChainDesc1.Width = window.GetWidth();
+        swapChainDesc1.Height = window.GetHeight();
+        swapChainDesc1.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc1.BufferCount = 2; // For DXGI_SWAP_EFFECT_FLIP_DISCARD
+        swapChainDesc1.Scaling = DXGI_SCALING_NONE;
+        swapChainDesc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+        swapChainDesc1.SampleDesc.Count = 1;
+        swapChainDesc1.SampleDesc.Quality = 0;
 
-        hr = pIDXGIFactory->CreateSwapChainForHwnd(m_D3D11Device, window.GetHandle(), &swapChainDesc, nullptr, nullptr, &m_D3D11SwapChain);
+        hr = pIDXGIFactory2->CreateSwapChainForHwnd(m_D3D11Device.Get(), window.GetHandle(), &swapChainDesc1, nullptr, nullptr, &m_D3D11SwapChain1);
         if (FAILED(hr))
             throw std::runtime_error("Failed to create swap chain");
 
-        hr = pIDXGIFactory->MakeWindowAssociation(window.GetHandle(), DXGI_MWA_NO_WINDOW_CHANGES);
+        hr = pIDXGIFactory2->MakeWindowAssociation(window.GetHandle(), DXGI_MWA_NO_WINDOW_CHANGES);
         assert(SUCCEEDED(hr));
-
-        pIDXGIFactory->Release();
-        pDXGIAdapter->Release();
-        pDXGIDevice->Release();
     }
 
     {
-        ID3D11Texture2D* pBackBuffer = nullptr;
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> pBackBuffer;
 
-        HRESULT hr = m_D3D11SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&pBackBuffer));
+        HRESULT hr = m_D3D11SwapChain1->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
         assert(SUCCEEDED(hr));
 
-        hr = m_D3D11Device->CreateRenderTargetView(pBackBuffer, nullptr, &m_RenderTargetView);
+        hr = m_D3D11Device->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &m_RenderTargetView);
         assert(SUCCEEDED(hr));
-
-        pBackBuffer->Release();
     }
 
     {
@@ -110,7 +104,7 @@ DX11Device::DX11Device(const Window& window)
         HRESULT hr = m_D3D11Device->CreateTexture2D(&depthStencilDesc, 0, &m_DepthStencilBuffer);
         assert(SUCCEEDED(hr));
 
-        hr = m_D3D11Device->CreateDepthStencilView(m_DepthStencilBuffer, nullptr, &m_DepthStencilView);
+        hr = m_D3D11Device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), nullptr, &m_DepthStencilView);
         assert(SUCCEEDED(hr));
     }
 
@@ -122,40 +116,22 @@ DX11Device::DX11Device(const Window& window)
         viewport.MaxDepth = 1.0f;
 
         m_D3D11DeviceContext->RSSetViewports(1, &viewport); // Rasterizer Stage
-        m_D3D11DeviceContext->OMSetRenderTargets(1, &m_RenderTargetView, m_DepthStencilView); // Output Merger
+        m_D3D11DeviceContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_DepthStencilView.Get()); // Output Merger
     }
 }
 
 DX11Device::~DX11Device()
-{
-    if (m_DepthStencilView)
-        m_DepthStencilView->Release();
-
-    if (m_DepthStencilBuffer)
-        m_DepthStencilBuffer->Release();
-
-    if (m_RenderTargetView)
-        m_RenderTargetView->Release();
-
-    if (m_D3D11SwapChain)
-        m_D3D11SwapChain->Release();
-
-    if (m_D3D11DeviceContext)
-        m_D3D11DeviceContext->Release();
-
-    if (m_D3D11Device)
-        m_D3D11Device->Release();
-}
+{ }
 
 void DX11Device::FrameBegin(Context& context)
 {
     FLOAT red[] = { 1.0f, 0.0f, 0.0f, 0.0f };
-    m_D3D11DeviceContext->ClearRenderTargetView(m_RenderTargetView, red);
-    m_D3D11DeviceContext->ClearDepthStencilView(m_DepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    m_D3D11DeviceContext->ClearRenderTargetView(m_RenderTargetView.Get(), red);
+    m_D3D11DeviceContext->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void DX11Device::FrameEnd(Context& context)
 {
     DXGI_PRESENT_PARAMETERS params{ };
-    m_D3D11SwapChain->Present1(0, 0, &params);
+    m_D3D11SwapChain1->Present1(0, 0, &params);
 }
