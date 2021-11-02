@@ -27,8 +27,10 @@
 #include <cassert>
 #include <stdexcept>
 
-DX11Device::DX11Device(const Window& window)
+DX11Device::DX11Device(Context& context)
 {
+    Window& window = context.GetWindow();
+
     {
 #ifndef NDEBUG
         UINT uD3D11Flags = D3D11_CREATE_DEVICE_DEBUG;
@@ -67,7 +69,7 @@ DX11Device::DX11Device(const Window& window)
         swapChainDesc1.BufferCount = 2; // For DXGI_SWAP_EFFECT_FLIP_DISCARD
         swapChainDesc1.Scaling = DXGI_SCALING_NONE;
         swapChainDesc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swapChainDesc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+        swapChainDesc1.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
         swapChainDesc1.SampleDesc.Count = 1;
         swapChainDesc1.SampleDesc.Quality = 0;
 
@@ -107,21 +109,7 @@ DX11Device::DX11Device(const Window& window)
         hr = m_D3D11Device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), nullptr, &m_DepthStencilView);
         assert(SUCCEEDED(hr));
     }
-
-    {
-        D3D11_VIEWPORT viewport{ };
-        viewport.Width = static_cast<FLOAT>(window.GetWidth());
-        viewport.Height = static_cast<FLOAT>(window.GetHeight());
-        viewport.MinDepth = 0.0f;
-        viewport.MaxDepth = 1.0f;
-
-        m_D3D11DeviceContext->RSSetViewports(1, &viewport); // Rasterizer Stage
-        m_D3D11DeviceContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_DepthStencilView.Get()); // Output Merger
-    }
 }
-
-DX11Device::~DX11Device()
-{ }
 
 ID3D11Device& DX11Device::GetHandle() const
 {
@@ -135,9 +123,24 @@ ID3D11DeviceContext& DX11Device::GetContext() const
 
 void DX11Device::FrameBegin(Context& context)
 {
-    FLOAT red[] = { 1.0f, 0.0f, 0.0f, 0.0f };
-    m_D3D11DeviceContext->ClearRenderTargetView(m_RenderTargetView.Get(), red);
-    m_D3D11DeviceContext->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    Window& window = context.GetWindow();
+
+    {
+        D3D11_VIEWPORT viewport{ };
+        viewport.Width = static_cast<FLOAT>(window.GetWidth());
+        viewport.Height = static_cast<FLOAT>(window.GetHeight());
+        viewport.MinDepth = 0.0f;
+        viewport.MaxDepth = 1.0f;
+
+        m_D3D11DeviceContext->RSSetViewports(1, &viewport); // Rasterizer Stage
+        m_D3D11DeviceContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_DepthStencilView.Get()); // Output Merger
+    }
+
+    {
+        FLOAT red[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        m_D3D11DeviceContext->ClearRenderTargetView(m_RenderTargetView.Get(), red);
+        m_D3D11DeviceContext->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    }
 }
 
 void DX11Device::FrameEnd(Context& context)

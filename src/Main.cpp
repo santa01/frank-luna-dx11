@@ -28,12 +28,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     Game game;
 
-    ContextInfo info{ };
-    info.windowCaption = "Game";
-    info.windowWidth = 800;
-    info.windowHeight = 600;
+    ContextParams params{ };
+    params.m_WindowCaption = "Game";
+    params.m_WindowWidth = 800;
+    params.m_WindowHeight = 600;
 
-    Context context(game, info);
+    Context context(game, params);
     context.Run();
 
     return 0;

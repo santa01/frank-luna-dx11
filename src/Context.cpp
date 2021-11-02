@@ -24,11 +24,17 @@
 #include "Application.h"
 #include <chrono>
 
-Context::Context(Application& application, const ContextInfo& info)
+Context::Context(Application& application, const ContextParams& params)
     : m_Application(&application)
+    , m_Params(params)
 {
-    m_Window.reset(new Window(info.windowCaption.c_str(), static_cast<LONG>(info.windowWidth), static_cast<LONG>(info.windowHeight)));
-    m_Device.reset(new DX11Device(*m_Window));
+    m_Window.reset(new Window(*this));
+    m_Device.reset(new DX11Device(*this));
+}
+
+const ContextParams& Context::GetParams() const
+{
+    return m_Params;
 }
 
 Window& Context::GetWindow() const

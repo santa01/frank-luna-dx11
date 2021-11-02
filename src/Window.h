@@ -29,7 +29,7 @@ class Context;
 class Window final
 {
 public:
-    Window(LPCSTR caption, LONG width, LONG height);
+    Window(Context& context);
     ~Window();
 
     LONG GetWidth() const;

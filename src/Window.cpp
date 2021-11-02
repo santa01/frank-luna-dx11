@@ -25,11 +25,14 @@
 #include <windowsx.h>
 #include <stdexcept>
 
-Window::Window(LPCSTR caption, LONG width, LONG height)
-    : m_Width(width)
-    , m_Height(height)
-    , m_Instance(GetModuleHandle(nullptr))
+Window::Window(Context& context)
 {
+    const ContextParams& params = context.GetParams();
+
+    m_Width = params.m_WindowWidth;
+    m_Height = params.m_WindowHeight;
+    m_Instance = GetModuleHandle(nullptr);
+
     {
         WNDCLASSEX wcex{ };
         wcex.cbSize = sizeof(wcex);
@@ -38,7 +41,7 @@ Window::Window(LPCSTR caption, LONG width, LONG height)
         wcex.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
         wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
         wcex.hbrBackground = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
-        wcex.lpszMenuName = caption;
+        wcex.lpszMenuName = params.m_WindowCaption.c_str();
         wcex.lpszClassName = m_WindowClass;
 
         m_Class = RegisterClassEx(&wcex);
@@ -53,7 +56,7 @@ Window::Window(LPCSTR caption, LONG width, LONG height)
         LONG windowWidth = windowRect.right - windowRect.left;
         LONG windowHeight = windowRect.bottom - windowRect.top;
 
-        m_Handle = CreateWindowEx(0, m_WindowClass, caption, m_WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, nullptr, nullptr, m_Instance, nullptr);
+        m_Handle = CreateWindowEx(0, m_WindowClass, params.m_WindowCaption.c_str(), m_WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, nullptr, nullptr, m_Instance, nullptr);
         if (!m_Handle)
             throw std::runtime_error("Failed to create window");
     }

@@ -27,13 +27,11 @@
 #include <wrl/client.h>
 
 class Context;
-class Window;
 
 class DX11Device final
 {
 public:
-    DX11Device(const Window& window);
-    ~DX11Device();
+    DX11Device(Context& context);
 
     ID3D11Device& GetHandle() const;
     ID3D11DeviceContext& GetContext() const;

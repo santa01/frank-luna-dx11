@@ -30,20 +30,23 @@
 
 class Application;
 
-struct ContextInfo final
+struct ContextParams final
 {
-    std::string windowCaption;
-    size_t windowWidth;
-    size_t windowHeight;
+    std::string m_WindowCaption;
+    size_t m_WindowWidth;
+    size_t m_WindowHeight;
 };
 
 class Context final
 {
 public:
-    Context(Application& application, const ContextInfo& info);
+    Context(Application& application, const ContextParams& params);
+
+    const ContextParams& GetParams() const;
 
     Window& GetWindow() const;
     DX11Device& GetDevice() const;
+
     float GetFrameTime() const;
 
     void Run();
@@ -57,6 +60,7 @@ public:
 
 private:
     Application* m_Application{ nullptr };
+    ContextParams m_Params{ };
 
     std::unique_ptr<Window> m_Window;
     std::unique_ptr<DX11Device> m_Device;
