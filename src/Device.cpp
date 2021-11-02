@@ -123,6 +123,16 @@ DX11Device::DX11Device(const Window& window)
 DX11Device::~DX11Device()
 { }
 
+ID3D11Device& DX11Device::GetHandle() const
+{
+    return *m_D3D11Device.Get();
+}
+
+ID3D11DeviceContext& DX11Device::GetContext() const
+{
+    return *m_D3D11DeviceContext.Get();
+}
+
 void DX11Device::FrameBegin(Context& context)
 {
     FLOAT red[] = { 1.0f, 0.0f, 0.0f, 0.0f };

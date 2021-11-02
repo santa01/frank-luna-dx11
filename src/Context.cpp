@@ -31,12 +31,12 @@ Context::Context(Application& application, const ContextInfo& info)
     m_Device.reset(new DX11Device(*m_Window));
 }
 
-const Window& Context::GetWindow() const
+Window& Context::GetWindow() const
 {
     return *m_Window;
 }
 
-const DX11Device& Context::GetDevice() const
+DX11Device& Context::GetDevice() const
 {
     return *m_Device;
 }

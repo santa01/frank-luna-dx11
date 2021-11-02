@@ -42,9 +42,8 @@ class Context final
 public:
     Context(Application& application, const ContextInfo& info);
 
-    const Window& GetWindow() const;
-    const DX11Device& GetDevice() const;
-
+    Window& GetWindow() const;
+    DX11Device& GetDevice() const;
     float GetFrameTime() const;
 
     void Run();

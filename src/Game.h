@@ -23,12 +23,15 @@
 #pragma once
 
 #include "Application.h"
+#include "Mesh.h"
+#include "Shader.h"
+#include <memory>
 
 class Context;
 
 class Game final : public Application
 {
-private:
+public:
     void Start(Context& context) override;
     void Shutdown(Context& context) override;
 
@@ -39,4 +42,8 @@ private:
     void OnMouseMove(Context& context, int x, int y);
 
     void Update(Context& context) override;
+
+private:
+    std::unique_ptr<Shader> m_Shader;
+    std::unique_ptr<Mesh> m_Mesh;
 };

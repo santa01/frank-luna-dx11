@@ -23,30 +23,58 @@
 #pragma once
 
 #include <d3d11.h>
-#include <dxgi1_2.h>
 #include <wrl/client.h>
 
 class Context;
-class Window;
 
-class DX11Device final
+class Shader final
 {
 public:
-    DX11Device(const Window& window);
-    ~DX11Device();
+    Shader(Context& context);
 
-    ID3D11Device& GetHandle() const;
-    ID3D11DeviceContext& GetContext() const;
-
-    void FrameBegin(Context& context);
-    void FrameEnd(Context& context);
+    void Enable(Context& context) const;
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11Device> m_D3D11Device;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_D3D11DeviceContext;
-    Microsoft::WRL::ComPtr<IDXGISwapChain1> m_D3D11SwapChain1;
+    static constexpr char m_VertexShaderSource[] =
+    R"(
+        struct VertexInput
+        {
+            float3 position : POSITION;
+            float4 color : COLOR;
+        };
 
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilBuffer;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
+        struct VertexOutput
+        {
+            float4 position : SV_POSITION; // System Value
+            float4 color : COLOR;
+        };
+
+        VertexOutput Main(VertexInput vertex)
+        {
+            VertexOutput output;
+
+            output.position = float4(vertex.position, 1.0f);
+            output.color = vertex.color;
+
+            return output;
+        }
+    )";
+
+    static constexpr char m_PixelShaderSource[] =
+    R"(
+        struct VertexOutput
+        {
+            float4 position : SV_POSITION; // System Value
+            float4 color : COLOR;
+        };
+
+        float4 Main(VertexOutput vertex) : SV_TARGET
+        {
+            return vertex.color;
+        }
+    )";
+
+    Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VertexShader;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PixelShader;
+    Microsoft::WRL::ComPtr<ID3D11InputLayout> m_InputLayout;
 };

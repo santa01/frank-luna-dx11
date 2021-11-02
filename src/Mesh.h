@@ -23,30 +23,37 @@
 #pragma once
 
 #include <d3d11.h>
-#include <dxgi1_2.h>
 #include <wrl/client.h>
+#include <DirectXMath.h>
 
 class Context;
-class Window;
 
-class DX11Device final
+class Mesh final
 {
 public:
-    DX11Device(const Window& window);
-    ~DX11Device();
+    Mesh(Context& context);
 
-    ID3D11Device& GetHandle() const;
-    ID3D11DeviceContext& GetContext() const;
-
-    void FrameBegin(Context& context);
-    void FrameEnd(Context& context);
+    void Draw(Context& context) const;
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11Device> m_D3D11Device;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_D3D11DeviceContext;
-    Microsoft::WRL::ComPtr<IDXGISwapChain1> m_D3D11SwapChain1;
+    struct Vertex
+    {
+        DirectX::XMFLOAT3 Position;
+        DirectX::XMFLOAT4 Color;
+    };
 
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilBuffer;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
+    static constexpr Vertex m_Vertices[] =
+    {
+        { {  0.0f, 0.5f, 0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { {  0.5f, 0.0f, 0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { { -0.5f, 0.0f, 0.25f }, { 1.0f, 0.0f, 0.0f, 1.0f } }
+    };
+
+    static constexpr UINT m_Indices[] =
+    {
+        0, 1, 2 // CW
+    };
+
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_VertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_IndexBuffer;
 };

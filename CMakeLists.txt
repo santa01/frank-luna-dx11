@@ -36,4 +36,4 @@ source_group(TREE ${SOURCE_ROOT} PREFIX "Header Files" FILES ${HeaderFiles})
 add_executable(DX11 WIN32 ${SourceFiles} ${HeaderFiles})
 
 target_compile_features(DX11 PRIVATE cxx_std_17)
-target_link_libraries(DX11 PRIVATE d3d11)
+target_link_libraries(DX11 PRIVATE d3d11 d3dcompiler)
