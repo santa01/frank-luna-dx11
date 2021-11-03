@@ -31,7 +31,7 @@ void Game::Start(Context& context)
     context.OnMouseUp.Connect(std::bind(&Game::OnMouseUp, this, std::placeholders::_1, std::placeholders::_2));
     context.OnMouseMove.Connect(std::bind(&Game::OnMouseMove, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-    m_Shader.reset(new Shader(context));
+    m_Shader.reset(new Shader(context, "Shader.fx"));
     m_Mesh.reset(new Mesh(context));
 }
 

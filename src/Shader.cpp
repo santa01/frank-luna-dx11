@@ -24,13 +24,26 @@
 #include "Context.h"
 #include <windows.h>
 #include <d3dcompiler.h>
-#include <string>
+#include <fstream>
 #include <stdexcept>
 #include <cassert>
 
-Shader::Shader(Context& context)
+Shader::Shader(Context& context, const std::string& source)
 {
     ID3D11Device& device = context.GetDevice().GetHandle();
+
+    std::ifstream sourceFile(source, std::ios::in | std::ios::binary);
+    if (!sourceFile)
+    {
+        throw std::runtime_error("Failed to open shader: " + source);
+    }
+
+    sourceFile.seekg(0, std::ios::end);
+    size_t sourceSize = sourceFile.tellg();
+    sourceFile.seekg(0, std::ios::beg);
+
+    std::unique_ptr<char[]> shaderSource(new char[sourceSize]);
+    sourceFile.read(shaderSource.get(), sourceSize);
 
 #ifndef NDEBUG
     UINT uFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -39,10 +52,12 @@ Shader::Shader(Context& context)
 #endif // NDEBUG
 
     {
+        D3D_SHADER_MACRO shaderMacro[] = { "VERTEX_SHADER", "", nullptr, nullptr };
+
         Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> errorsBlob;
 
-        HRESULT hr = D3DCompile(m_VertexShaderSource, sizeof(m_VertexShaderSource), "Vertex Shader", nullptr, nullptr, "Main", "vs_5_0", uFlags, 0, &shaderBlob, &errorsBlob);
+        HRESULT hr = D3DCompile(shaderSource.get(), sourceSize, "Vertex Shader", shaderMacro, nullptr, "Main", "vs_5_0", uFlags, 0, &shaderBlob, &errorsBlob);
         if (FAILED(hr))
         {
             std::string error(reinterpret_cast<char*>(errorsBlob->GetBufferPointer()), errorsBlob->GetBufferSize());
@@ -63,10 +78,12 @@ Shader::Shader(Context& context)
     }
 
     {
+        D3D_SHADER_MACRO shaderMacro[] = { "PIXEL_SHADER", "", nullptr, nullptr };
+
         Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> errorsBlob;
 
-        HRESULT hr = D3DCompile(m_PixelShaderSource, sizeof(m_PixelShaderSource), "Pixel Shader", nullptr, nullptr, "Main", "ps_5_0", uFlags, 0, &shaderBlob, &errorsBlob);
+        HRESULT hr = D3DCompile(shaderSource.get(), sourceSize, "Pixel Shader", shaderMacro, nullptr, "Main", "ps_5_0", uFlags, 0, &shaderBlob, &errorsBlob);
         if (FAILED(hr))
         {
             std::string error(reinterpret_cast<char*>(errorsBlob->GetBufferPointer()), errorsBlob->GetBufferSize());

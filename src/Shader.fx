@@ -20,23 +20,37 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include <d3d11.h>
-#include <wrl/client.h>
-#include <string>
-
-class Context;
-
-class Shader final
+struct VertexOutput
 {
-public:
-    Shader(Context& context, const std::string& source);
-
-    void Enable(Context& context) const;
-
-private:
-    Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VertexShader;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PixelShader;
-    Microsoft::WRL::ComPtr<ID3D11InputLayout> m_InputLayout;
+    float4 position : SV_POSITION; // System Value
+    float4 color : COLOR;
 };
+
+#ifdef VERTEX_SHADER
+
+struct VertexInput
+{
+    float3 position : POSITION;
+    float4 color : COLOR;
+};
+
+VertexOutput Main(VertexInput vertex)
+{
+    VertexOutput output;
+
+    output.position = float4(vertex.position, 1.0f);
+    output.color = vertex.color;
+
+    return output;
+}
+
+#endif // VERTEX_SHADER
+
+#ifdef PIXEL_SHADER
+
+float4 Main(VertexOutput vertex) : SV_TARGET
+{
+    return vertex.color;
+}
+
+#endif // PIXEL_SHADER

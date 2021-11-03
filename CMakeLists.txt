@@ -29,11 +29,15 @@ set(SOURCE_ROOT ${CMAKE_SOURCE_DIR}/src)
 
 file(GLOB SourceFiles ${SOURCE_ROOT}/*.cpp)
 file(GLOB HeaderFiles ${SOURCE_ROOT}/*.h)
+file(GLOB ShaderFiles ${SOURCE_ROOT}/*.fx)
 
 source_group(TREE ${SOURCE_ROOT} PREFIX "Source Files" FILES ${SourceFiles})
 source_group(TREE ${SOURCE_ROOT} PREFIX "Header Files" FILES ${HeaderFiles})
+source_group(TREE ${SOURCE_ROOT} PREFIX "Shader Files" FILES ${ShaderFiles})
 
-add_executable(DX11 WIN32 ${SourceFiles} ${HeaderFiles})
+add_executable(DX11 WIN32 ${SourceFiles} ${HeaderFiles} ${ShaderFiles})
 
 target_compile_features(DX11 PRIVATE cxx_std_17)
 target_link_libraries(DX11 PRIVATE d3d11 d3dcompiler)
+
+add_custom_command(TARGET DX11 POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ShaderFiles} $<TARGET_FILE_DIR:DX11>)
