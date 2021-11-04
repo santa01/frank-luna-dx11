@@ -67,6 +67,6 @@ private:
     float m_NearPlane{ 0.1f };
     float m_FarPlane{ 10.0f };
 
-    DirectX::XMMATRIX m_View{ };
-    DirectX::XMMATRIX m_Projection{ };
+    DirectX::XMMATRIX m_View{ DirectX::XMMatrixIdentity() };
+    DirectX::XMMATRIX m_Projection{ DirectX::XMMatrixIdentity() };
 };

@@ -33,9 +33,28 @@ class Mesh final
 public:
     Mesh(Context& context);
 
+    const DirectX::XMMATRIX& GetRotation() const;
+    void Rotate(const DirectX::XMVECTOR& axis, float angle);
+
+    const DirectX::XMVECTOR& GetScaling() const;
+    void Scale(const DirectX::XMVECTOR& scaling);
+
+    const DirectX::XMVECTOR& GetPosition() const;
+    void Move(const DirectX::XMVECTOR& position);
+
+    const DirectX::XMMATRIX& GetWorld() const;
+
     void Draw(Context& context) const;
 
 private:
+    void UpdateWorld();
+
+    DirectX::XMMATRIX m_Rotataion{ DirectX::XMMatrixIdentity() };
+    DirectX::XMVECTOR m_Scaling{ 1.0f, 1.0f, 1.0f, 1.0f };
+    DirectX::XMVECTOR m_Position{ 0.0f, 0.0f, 0.0f, 1.0f };
+
+    DirectX::XMMATRIX m_World{ DirectX::XMMatrixIdentity() };
+
     struct Vertex
     {
         DirectX::XMFLOAT3 Position;
@@ -44,14 +63,14 @@ private:
 
     static constexpr Vertex m_Vertices[] =
     {
-        { {  0.0f, 0.5f, 5.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-        { {  0.5f, 0.0f, 5.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-        { { -0.5f, 0.0f, 5.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+        { {  0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { {  1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+        { { -1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
 
     static constexpr UINT m_Indices[] =
     {
-        0, 1, 2 // CW
+        0, 1, 2 // Clockwise
     };
 
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_VertexBuffer;

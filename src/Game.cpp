@@ -29,6 +29,7 @@ void Game::Start(Context& context)
 
     m_Camera.reset(new Camera());
     m_Camera->SetAspectRatio(window.GetAspectRatio());
+    m_Camera->Move({ 0.0f, 0.0f, -5.0f, 0.0f });
 
     m_Shader.reset(new Shader(context, "Shader.fx"));
     m_Mesh.reset(new Mesh(context));
@@ -45,9 +46,6 @@ void Game::Shutdown(Context& context)
 
 void Game::OnKeyDown(Context& context, unsigned int key)
 {
-    if (key == VK_ESCAPE)
-        context.Terminate();
-
     if (key == 'W')
     {
         const DirectX::XMVECTOR& forward = m_Camera->GetForward();
@@ -71,6 +69,48 @@ void Game::OnKeyDown(Context& context, unsigned int key)
         const DirectX::XMVECTOR& right = m_Camera->GetRight();
         m_Camera->Move(DirectX::XMVectorScale(right, 0.1f));
     }
+
+    bool isShiftPressed = GetAsyncKeyState(VK_SHIFT);
+    bool isControlPressed = GetAsyncKeyState(VK_CONTROL);
+
+    if (key == '1' || key == '2')
+    {
+        bool isRight = (key == '2');
+
+        if (isShiftPressed)
+            m_Mesh->Scale({ isRight ? 1.25f : 0.8f, 1.0f, 1.0f, 1.0f });
+        else if (isControlPressed)
+            m_Mesh->Rotate({ 1.0f, 0.0f, 0.0f, 0.0f }, isRight ? 5.0f : -5.0f);
+        else
+            m_Mesh->Move({ isRight ? 0.25f : -0.25f, 0.0f, 0.0f, 0.0f });
+    }
+
+    if (key == '3' || key == '4')
+    {
+        bool isUp = (key == '4');
+
+        if (isShiftPressed)
+            m_Mesh->Scale({ 1.0f, isUp ? 1.25f : 0.8f, 1.0f, 1.0f });
+        else if (isControlPressed)
+            m_Mesh->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, isUp ? 5.0f : -5.0f);
+        else
+            m_Mesh->Move({ 0.0f, isUp ? 0.25f : -0.25f, 0.0f, 0.0f });
+    }
+
+    if (key == '5' || key == '6')
+    {
+        bool isForward = (key == '6');
+
+        if (isShiftPressed)
+            m_Mesh->Scale({ 1.0f, 1.0f, isForward ? 1.25f : 0.8f, 1.0f });
+        else if (isControlPressed)
+            m_Mesh->Rotate({ 0.0f, 0.0f, 1.0f, 0.0f }, isForward ? 5.0f : -5.0f);
+        else
+            m_Mesh->Move({ 0.0f, 0.0f, isForward ? 0.25f : -0.25f, 0.0f });
+    }
+
+    if (key == VK_ESCAPE)
+        context.Terminate();
 }
 
 void Game::OnKeyUp(Context& context, unsigned int key)
@@ -123,7 +163,7 @@ void Game::OnMouseMove(Context& context, int x, int y)
 void Game::Update(Context& context)
 {
     DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection());
-    DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(DirectX::XMMatrixIdentity(), vp);
+    DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(m_Mesh->GetWorld(), vp);
 
     m_Shader->SetWVP(wvp);
     m_Shader->Enable(context);

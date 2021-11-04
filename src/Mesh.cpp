@@ -57,6 +57,47 @@ Mesh::Mesh(Context& context)
         HRESULT hr = device.CreateBuffer(&indexBufferDesc, &indexBufferData, &m_IndexBuffer);
         assert(SUCCEEDED(hr));
     }
+
+    UpdateWorld();
+}
+
+const DirectX::XMMATRIX& Mesh::GetRotation() const
+{
+    return m_Rotataion;
+}
+
+void Mesh::Rotate(const DirectX::XMVECTOR& axis, float angle)
+{
+    DirectX::XMMATRIX rotation(DirectX::XMMatrixRotationAxis(axis, DirectX::XMConvertToRadians(angle)));
+    m_Rotataion = DirectX::XMMatrixMultiply(m_Rotataion, rotation);
+    UpdateWorld();
+}
+
+const DirectX::XMVECTOR& Mesh::GetScaling() const
+{
+    return m_Scaling;
+}
+
+void Mesh::Scale(const DirectX::XMVECTOR& scaling)
+{
+    m_Scaling = DirectX::XMVectorMultiply(m_Scaling, scaling);
+    UpdateWorld();
+}
+
+const DirectX::XMVECTOR& Mesh::GetPosition() const
+{
+    return m_Position;
+}
+
+void Mesh::Move(const DirectX::XMVECTOR& position)
+{
+    m_Position = DirectX::XMVectorAdd(m_Position, position);
+    UpdateWorld();
+}
+
+const DirectX::XMMATRIX& Mesh::GetWorld() const
+{
+    return m_World;
 }
 
 void Mesh::Draw(Context& context) const
@@ -74,4 +115,12 @@ void Mesh::Draw(Context& context) const
     }
 
     deviceContext.DrawIndexed(sizeof(m_Indices) / sizeof(m_Indices[0]), 0, 0);
+}
+
+void Mesh::UpdateWorld()
+{
+    DirectX::XMMATRIX scaling(DirectX::XMMatrixScalingFromVector(m_Scaling));
+    DirectX::XMMATRIX translation(DirectX::XMMatrixTranslationFromVector(m_Position));
+
+    m_World = scaling * m_Rotataion * translation;
 }
