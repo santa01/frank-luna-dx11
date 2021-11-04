@@ -47,6 +47,42 @@ void Game::OnKeyDown(Context& context, unsigned int key)
 {
     if (key == VK_ESCAPE)
         context.Terminate();
+
+    if (key == VK_UP)
+        m_Camera->Rotate(m_Camera->GetRight(), -1.0f);
+
+    if (key == VK_DOWN)
+        m_Camera->Rotate(m_Camera->GetRight(), 1.0f);
+
+    if (key == VK_LEFT)
+        m_Camera->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, -1.0f);
+
+    if (key == VK_RIGHT)
+        m_Camera->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, 1.0f);
+
+    if (key == 'W')
+    {
+        const DirectX::XMVECTOR forward(m_Camera->GetForward());
+        m_Camera->Move(DirectX::XMVectorScale(forward, 0.1f));
+    }
+
+    if (key == 'S')
+    {
+        const DirectX::XMVECTOR forward(m_Camera->GetForward());
+        m_Camera->Move(DirectX::XMVectorScale(forward, -0.1f));
+    }
+
+    if (key == 'A')
+    {
+        const DirectX::XMVECTOR right(m_Camera->GetRight());
+        m_Camera->Move(DirectX::XMVectorScale(right, -0.1f));
+    }
+
+    if (key == 'D')
+    {
+        const DirectX::XMVECTOR right(m_Camera->GetRight());
+        m_Camera->Move(DirectX::XMVectorScale(right, 0.1f));
+    }
 }
 
 void Game::OnKeyUp(Context& context, unsigned int key)
@@ -63,7 +99,10 @@ void Game::OnMouseMove(Context& context, int x, int y)
 
 void Game::Update(Context& context)
 {
-    m_Shader->SetWVP(m_Camera->GetProjection());
+    DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection());
+    DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(DirectX::XMMatrixIdentity(), vp);
+
+    m_Shader->SetWVP(wvp);
     m_Shader->Enable(context);
     m_Mesh->Draw(context);
 }

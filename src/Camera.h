@@ -29,6 +29,16 @@ class Camera final
 public:
     Camera();
 
+    const DirectX::XMVECTOR& GetPosition() const;
+    void Move(const DirectX::XMVECTOR& vector);
+
+    const DirectX::XMVECTOR& GetRight() const;
+    const DirectX::XMVECTOR& GetUp() const;
+    const DirectX::XMVECTOR& GetForward() const;
+    void Rotate(const DirectX::XMVECTOR& axis, float angle);
+
+    const DirectX::XMMATRIX& GetView() const;
+
     float GetFov() const;
     void SetFov(float fov);
 
@@ -44,12 +54,19 @@ public:
     const DirectX::XMMATRIX& GetProjection() const;
 
 private:
+    void UpdateView();
     void UpdateProjection();
+
+    DirectX::XMVECTOR m_Position{ 0.0f, 0.0f, 0.0f, 1.0f }; // Zero
+    DirectX::XMVECTOR m_Right{ 1.0f, 0.0f, 0.0f, 0.0f };    // X
+    DirectX::XMVECTOR m_Up{ 0.0f, 1.0f, 0.0f, 0.0f };       // Y
+    DirectX::XMVECTOR m_Forward{ 0.0f, 0.0f, 1.0f, 0.0f };  // Z
 
     float m_Fov{ 90.0f };
     float m_AspectRatio{ 1.0f };
-    float m_NearPlane{ 1.0f };
+    float m_NearPlane{ 0.1f };
     float m_FarPlane{ 10.0f };
 
+    DirectX::XMMATRIX m_View{ };
     DirectX::XMMATRIX m_Projection{ };
 };

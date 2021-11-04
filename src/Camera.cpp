@@ -24,7 +24,48 @@
 
 Camera::Camera()
 {
+    UpdateView();
     UpdateProjection();
+}
+
+const DirectX::XMVECTOR& Camera::GetPosition() const
+{
+    return m_Position;
+}
+
+void Camera::Move(const DirectX::XMVECTOR& vector)
+{
+    m_Position = DirectX::XMVectorAdd(m_Position, vector);
+    UpdateView();
+}
+
+const DirectX::XMVECTOR& Camera::GetRight() const
+{
+    return m_Right;
+}
+
+const DirectX::XMVECTOR& Camera::GetUp() const
+{
+    return m_Up;
+}
+
+const DirectX::XMVECTOR& Camera::GetForward() const
+{
+    return m_Forward;
+}
+
+void Camera::Rotate(const DirectX::XMVECTOR& axis, float angle)
+{
+    DirectX::XMMATRIX rotation(DirectX::XMMatrixRotationAxis(axis, DirectX::XMConvertToRadians(angle)));
+    m_Up = DirectX::XMVector4Transform(m_Up, rotation);
+    m_Forward = DirectX::XMVector4Transform(m_Forward, rotation);
+    UpdateView();
+    m_Right = { DirectX::XMVectorGetX(m_View.r[0]), DirectX::XMVectorGetX(m_View.r[1]), DirectX::XMVectorGetX(m_View.r[2]), DirectX::XMVectorGetX(m_View.r[3]) };
+}
+
+const DirectX::XMMATRIX& Camera::GetView() const
+{
+    return m_View;
 }
 
 float Camera::GetFov() const
@@ -76,7 +117,12 @@ const DirectX::XMMATRIX& Camera::GetProjection() const
     return m_Projection;
 }
 
+void Camera::UpdateView()
+{
+    m_View = DirectX::XMMatrixLookToLH(m_Position, m_Forward, m_Up);
+}
+
 void Camera::UpdateProjection()
 {
-    m_Projection = DirectX::XMMatrixPerspectiveFovLH(m_Fov, m_AspectRatio, m_NearPlane, m_FarPlane);
+    m_Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(m_Fov), m_AspectRatio, m_NearPlane, m_FarPlane);
 }

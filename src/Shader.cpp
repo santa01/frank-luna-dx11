@@ -111,9 +111,9 @@ const DirectX::XMMATRIX& Shader::GetWVP() const
     return m_VertexTransform.m_WVP;
 }
 
-void Shader::SetWVP(const DirectX::XMMATRIX& WVP)
+void Shader::SetWVP(const DirectX::XMMATRIX& wvp)
 {
-    m_VertexTransform.m_WVP = WVP;
+    m_VertexTransform.m_WVP = wvp;
 }
 
 void Shader::Enable(Context& context)

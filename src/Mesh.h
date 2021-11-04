@@ -44,9 +44,9 @@ private:
 
     static constexpr Vertex m_Vertices[] =
     {
-        { {  0.0f, 0.5f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-        { {  0.5f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-        { { -0.5f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }
+        { {  0.0f, 0.5f, 5.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { {  0.5f, 0.0f, 5.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+        { { -0.5f, 0.0f, 5.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
 
     static constexpr UINT m_Indices[] =
