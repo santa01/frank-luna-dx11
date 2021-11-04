@@ -29,13 +29,13 @@ class Camera final
 public:
     Camera();
 
-    const DirectX::XMVECTOR& GetPosition() const;
-    void Move(const DirectX::XMVECTOR& vector);
-
     const DirectX::XMVECTOR& GetRight() const;
     const DirectX::XMVECTOR& GetUp() const;
     const DirectX::XMVECTOR& GetForward() const;
     void Rotate(const DirectX::XMVECTOR& axis, float angle);
+
+    const DirectX::XMVECTOR& GetPosition() const;
+    void Move(const DirectX::XMVECTOR& position);
 
     const DirectX::XMMATRIX& GetView() const;
 

@@ -36,9 +36,10 @@ public:
     LONG GetHeight() const;
     HWND GetHandle() const;
 
+    FLOAT GetAspectRatio() const;
     POINT GetCursorPosition() const;
-    void DrawCursor(bool show) const;
 
+    void DrawCursor(BOOL draw) const;
     void Update(Context& context);
 
 private:

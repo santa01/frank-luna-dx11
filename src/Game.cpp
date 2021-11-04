@@ -28,7 +28,7 @@ void Game::Start(Context& context)
     Window& window = context.GetWindow();
 
     m_Camera.reset(new Camera());
-    m_Camera->SetAspectRatio(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
+    m_Camera->SetAspectRatio(window.GetAspectRatio());
 
     m_Shader.reset(new Shader(context, "Shader.fx"));
     m_Mesh.reset(new Mesh(context));
@@ -50,25 +50,25 @@ void Game::OnKeyDown(Context& context, unsigned int key)
 
     if (key == 'W')
     {
-        const DirectX::XMVECTOR forward(m_Camera->GetForward());
+        const DirectX::XMVECTOR& forward = m_Camera->GetForward();
         m_Camera->Move(DirectX::XMVectorScale(forward, 0.1f));
     }
 
     if (key == 'S')
     {
-        const DirectX::XMVECTOR forward(m_Camera->GetForward());
+        const DirectX::XMVECTOR& forward = m_Camera->GetForward();
         m_Camera->Move(DirectX::XMVectorScale(forward, -0.1f));
     }
 
     if (key == 'A')
     {
-        const DirectX::XMVECTOR right(m_Camera->GetRight());
+        const DirectX::XMVECTOR& right = m_Camera->GetRight();
         m_Camera->Move(DirectX::XMVectorScale(right, -0.1f));
     }
 
     if (key == 'D')
     {
-        const DirectX::XMVECTOR right(m_Camera->GetRight());
+        const DirectX::XMVECTOR& right = m_Camera->GetRight();
         m_Camera->Move(DirectX::XMVectorScale(right, 0.1f));
     }
 }

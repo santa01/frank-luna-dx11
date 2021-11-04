@@ -28,17 +28,6 @@ Camera::Camera()
     UpdateProjection();
 }
 
-const DirectX::XMVECTOR& Camera::GetPosition() const
-{
-    return m_Position;
-}
-
-void Camera::Move(const DirectX::XMVECTOR& vector)
-{
-    m_Position = DirectX::XMVectorAdd(m_Position, vector);
-    UpdateView();
-}
-
 const DirectX::XMVECTOR& Camera::GetRight() const
 {
     return m_Right;
@@ -57,10 +46,24 @@ const DirectX::XMVECTOR& Camera::GetForward() const
 void Camera::Rotate(const DirectX::XMVECTOR& axis, float angle)
 {
     DirectX::XMMATRIX rotation(DirectX::XMMatrixRotationAxis(axis, DirectX::XMConvertToRadians(angle)));
+
     m_Up = DirectX::XMVector4Transform(m_Up, rotation);
     m_Forward = DirectX::XMVector4Transform(m_Forward, rotation);
     UpdateView();
-    m_Right = { DirectX::XMVectorGetX(m_View.r[0]), DirectX::XMVectorGetX(m_View.r[1]), DirectX::XMVectorGetX(m_View.r[2]), DirectX::XMVectorGetX(m_View.r[3]) };
+
+    DirectX::XMMATRIX transposedView(DirectX::XMMatrixTranspose(m_View));
+    m_Right = transposedView.r[0];
+}
+
+const DirectX::XMVECTOR& Camera::GetPosition() const
+{
+    return m_Position;
+}
+
+void Camera::Move(const DirectX::XMVECTOR& position)
+{
+    m_Position = DirectX::XMVectorAdd(m_Position, position);
+    UpdateView();
 }
 
 const DirectX::XMMATRIX& Camera::GetView() const

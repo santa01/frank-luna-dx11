@@ -89,6 +89,11 @@ HWND Window::GetHandle() const
     return m_Handle;
 }
 
+FLOAT Window::GetAspectRatio() const
+{
+    return static_cast<FLOAT>(m_Width) / static_cast<FLOAT>(m_Height);
+}
+
 POINT Window::GetCursorPosition() const
 {
     POINT cursorPosition{ };
@@ -97,9 +102,9 @@ POINT Window::GetCursorPosition() const
     return cursorPosition;
 }
 
-void Window::DrawCursor(bool show) const
+void Window::DrawCursor(BOOL draw) const
 {
-    ShowCursor(show);
+    ShowCursor(draw);
 }
 
 void Window::Update(Context& context)
