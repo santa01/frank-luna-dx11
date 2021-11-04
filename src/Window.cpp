@@ -29,8 +29,8 @@ Window::Window(Context& context)
 {
     const ContextParams& params = context.GetParams();
 
-    m_Width = params.m_WindowWidth;
-    m_Height = params.m_WindowHeight;
+    m_Width = static_cast<LONG>(params.m_WindowWidth);
+    m_Height = static_cast<LONG>(params.m_WindowHeight);
     m_Instance = GetModuleHandle(nullptr);
 
     {
@@ -111,14 +111,14 @@ LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
     {
-        context.OnKeyDown(context, wParam);
+        context.OnKeyDown(context, static_cast<unsigned int>(wParam));
         return 0;
     }
 
     case WM_KEYUP:
     case WM_SYSKEYUP:
     {
-        context.OnKeyUp(context, wParam);
+        context.OnKeyUp(context, static_cast<unsigned int>(wParam));
         return 0;
     }
 

@@ -37,6 +37,7 @@ source_group(TREE ${SOURCE_ROOT} PREFIX "Shader Files" FILES ${ShaderFiles})
 
 add_executable(DX11 WIN32 ${SourceFiles} ${HeaderFiles} ${ShaderFiles})
 
+target_compile_options(DX11 PRIVATE /W4 /WX /wd4100)
 target_compile_features(DX11 PRIVATE cxx_std_17)
 target_link_libraries(DX11 PRIVATE d3d11 d3dcompiler)
 
