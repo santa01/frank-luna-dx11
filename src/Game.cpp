@@ -25,14 +25,19 @@
 
 void Game::Start(Context& context)
 {
+    Window& window = context.GetWindow();
+
+    m_Camera.reset(new Camera());
+    m_Camera->SetAspectRatio(static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()));
+
+    m_Shader.reset(new Shader(context, "Shader.fx"));
+    m_Mesh.reset(new Mesh(context));
+
     context.OnKeyDown.Connect(std::bind(&Game::OnKeyDown, this, std::placeholders::_1, std::placeholders::_2));
     context.OnKeyUp.Connect(std::bind(&Game::OnKeyUp, this, std::placeholders::_1, std::placeholders::_2));
     context.OnMouseDown.Connect(std::bind(&Game::OnMouseDown, this, std::placeholders::_1, std::placeholders::_2));
     context.OnMouseUp.Connect(std::bind(&Game::OnMouseUp, this, std::placeholders::_1, std::placeholders::_2));
     context.OnMouseMove.Connect(std::bind(&Game::OnMouseMove, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
-    m_Shader.reset(new Shader(context, "Shader.fx"));
-    m_Mesh.reset(new Mesh(context));
 }
 
 void Game::Shutdown(Context& context)
@@ -58,6 +63,7 @@ void Game::OnMouseMove(Context& context, int x, int y)
 
 void Game::Update(Context& context)
 {
+    m_Shader->SetWVP(m_Camera->GetProjection());
     m_Shader->Enable(context);
     m_Mesh->Draw(context);
 }

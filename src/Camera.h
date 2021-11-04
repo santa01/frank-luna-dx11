@@ -22,38 +22,34 @@
 
 #pragma once
 
-#include <d3d11.h>
-#include <wrl/client.h>
 #include <DirectXMath.h>
-#include <string>
 
-class Context;
-
-class Shader final
+class Camera final
 {
 public:
-    Shader(Context& context, const std::string& source);
+    Camera();
 
-    const DirectX::XMMATRIX& GetWVP() const;
-    void SetWVP(const DirectX::XMMATRIX& wvp);
+    float GetFov() const;
+    void SetFov(float fov);
 
-    void Enable(Context& context);
+    float GetAspectRatio() const;
+    void SetAspectRatio(float aspectRatio);
+
+    float GetNearPlane() const;
+    void SetNearPlane(float nearPlane);
+
+    float GetFarPlane() const;
+    void SetFarPlane(float farPlane);
+
+    const DirectX::XMMATRIX& GetProjection() const;
 
 private:
-    void UpdateVertexTransform(Context& context);
+    void UpdateProjection();
 
-    // If the bind flag is D3D11_BIND_CONSTANT_BUFFER, you must set the ByteWidth value in multiples of 16
-    // https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_buffer_desc
-    struct VertexTransform
-    {
-        // Describes a 4*4 matrix aligned on a 16-byte boundary that maps to four hardware vector registers.
-        // https://docs.microsoft.com/en-us/windows/win32/api/directxmath/ns-directxmath-xmmatrix
-        DirectX::XMMATRIX m_WVP{ DirectX::XMMatrixIdentity() };
-    }
-    m_VertexTransform;
+    float m_Fov{ 90.0f };
+    float m_AspectRatio{ 1.0f };
+    float m_NearPlane{ 1.0f };
+    float m_FarPlane{ 10.0f };
 
-    Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VertexShader;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PixelShader;
-    Microsoft::WRL::ComPtr<ID3D11InputLayout> m_InputLayout;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> m_TransformBuffer;
+    DirectX::XMMATRIX m_Projection{ };
 };

@@ -93,9 +93,30 @@ Shader::Shader(Context& context, const std::string& source)
         hr = device.CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &m_PixelShader);
         assert(SUCCEEDED(hr));
     }
+
+    {
+        D3D11_BUFFER_DESC desc{ };
+        desc.ByteWidth = sizeof(VertexTransform);
+        desc.Usage = D3D11_USAGE_DYNAMIC;
+        desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+        HRESULT hr = device.CreateBuffer(&desc, nullptr, &m_TransformBuffer);
+        assert(SUCCEEDED(hr));
+    }
 }
 
-void Shader::Enable(Context& context) const
+const DirectX::XMMATRIX& Shader::GetWVP() const
+{
+    return m_VertexTransform.m_WVP;
+}
+
+void Shader::SetWVP(const DirectX::XMMATRIX& WVP)
+{
+    m_VertexTransform.m_WVP = WVP;
+}
+
+void Shader::Enable(Context& context)
 {
     ID3D11DeviceContext& deviceContext = context.GetDevice().GetContext();
 
@@ -103,4 +124,20 @@ void Shader::Enable(Context& context) const
     deviceContext.PSSetShader(m_PixelShader.Get(), nullptr, 0);
 
     deviceContext.IASetInputLayout(m_InputLayout.Get()); // Input Assembly
+    deviceContext.VSSetConstantBuffers(0, 1, m_TransformBuffer.GetAddressOf());
+
+    UpdateVertexTransform(context);
+}
+
+void Shader::UpdateVertexTransform(Context& context)
+{
+    ID3D11DeviceContext& deviceContext = context.GetDevice().GetContext();
+
+    {
+        D3D11_MAPPED_SUBRESOURCE mappedSubresource{ };
+
+        deviceContext.Map(m_TransformBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
+        std::memcpy(mappedSubresource.pData, &m_VertexTransform, sizeof(m_VertexTransform));
+        deviceContext.Unmap(m_TransformBuffer.Get(), 0);
+    }
 }

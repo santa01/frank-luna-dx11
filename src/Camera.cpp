@@ -20,32 +20,63 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include "Application.h"
 #include "Camera.h"
-#include "Shader.h"
-#include "Mesh.h"
-#include <memory>
 
-class Context;
-
-class Game final : public Application
+Camera::Camera()
 {
-public:
-    void Start(Context& context) override;
-    void Shutdown(Context& context) override;
+    UpdateProjection();
+}
 
-    void OnKeyDown(Context& context, unsigned int key);
-    void OnKeyUp(Context& context, unsigned int key);
-    void OnMouseDown(Context& context, unsigned int key);
-    void OnMouseUp(Context& context, unsigned int key);
-    void OnMouseMove(Context& context, int x, int y);
+float Camera::GetFov() const
+{
+    return m_Fov;
+}
 
-    void Update(Context& context) override;
+void Camera::SetFov(float fov)
+{
+    m_Fov = fov;
+    UpdateProjection();
+}
 
-private:
-    std::unique_ptr<Camera> m_Camera;
-    std::unique_ptr<Shader> m_Shader;
-    std::unique_ptr<Mesh> m_Mesh;
-};
+float Camera::GetAspectRatio() const
+{
+    return m_AspectRatio;
+}
+
+void Camera::SetAspectRatio(float aspectRatio)
+{
+    m_AspectRatio = aspectRatio;
+    UpdateProjection();
+}
+
+float Camera::GetNearPlane() const
+{
+    return m_NearPlane;
+}
+
+void Camera::SetNearPlane(float nearPlane)
+{
+    m_NearPlane = nearPlane;
+    UpdateProjection();
+}
+
+float Camera::GetFarPlane() const
+{
+    return m_FarPlane;
+}
+
+void Camera::SetFarPlane(float farPlane)
+{
+    m_FarPlane = farPlane;
+    UpdateProjection();
+}
+
+const DirectX::XMMATRIX& Camera::GetProjection() const
+{
+    return m_Projection;
+}
+
+void Camera::UpdateProjection()
+{
+    m_Projection = DirectX::XMMatrixPerspectiveFovLH(m_Fov, m_AspectRatio, m_NearPlane, m_FarPlane);
+}

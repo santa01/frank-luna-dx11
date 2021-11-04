@@ -20,13 +20,22 @@
  * SOFTWARE.
  */
 
+// https://docs.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-getting-started?redirectedfrom=MSDN#matrix-convention
+#pragma pack_matrix(row_major) // DirectXMath uses row-major matrices
+
 struct VertexOutput
 {
+    // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics
     float4 position : SV_POSITION; // System Value
     float4 color : COLOR;
 };
 
 #ifdef VERTEX_SHADER
+
+cbuffer VertexTransform
+{
+    float4x4 wvp; // World - View - Projection
+};
 
 struct VertexInput
 {
@@ -38,7 +47,8 @@ VertexOutput Main(VertexInput vertex)
 {
     VertexOutput output;
 
-    output.position = float4(vertex.position, 1.0f);
+    float4 position = float4(vertex.position, 1.0f);
+    output.position = mul(position, wvp);
     output.color = vertex.color;
 
     return output;
@@ -48,7 +58,8 @@ VertexOutput Main(VertexInput vertex)
 
 #ifdef PIXEL_SHADER
 
-float4 Main(VertexOutput vertex) : SV_TARGET
+// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics
+float4 Main(VertexOutput vertex) : SV_Target // System Value
 {
     return vertex.color;
 }
