@@ -36,6 +36,9 @@ public:
     LONG GetHeight() const;
     HWND GetHandle() const;
 
+    POINT GetCursorPosition() const;
+    void DrawCursor(bool show) const;
+
     void Update(Context& context);
 
 private:

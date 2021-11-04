@@ -89,6 +89,19 @@ HWND Window::GetHandle() const
     return m_Handle;
 }
 
+POINT Window::GetCursorPosition() const
+{
+    POINT cursorPosition{ };
+    GetCursorPos(&cursorPosition);
+    ScreenToClient(m_Handle, &cursorPosition);
+    return cursorPosition;
+}
+
+void Window::DrawCursor(bool show) const
+{
+    ShowCursor(show);
+}
+
 void Window::Update(Context& context)
 {
     SetWindowLongPtr(m_Handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&context));
@@ -132,7 +145,7 @@ LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     case WM_LBUTTONUP:
     case WM_RBUTTONUP:
     {
-        context.OnMouseUp(context, uMsg == WM_LBUTTONDOWN ? VK_LBUTTON : VK_RBUTTON);
+        context.OnMouseUp(context, uMsg == WM_LBUTTONUP ? VK_LBUTTON : VK_RBUTTON);
         return 0;
     }
 

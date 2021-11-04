@@ -48,18 +48,6 @@ void Game::OnKeyDown(Context& context, unsigned int key)
     if (key == VK_ESCAPE)
         context.Terminate();
 
-    if (key == VK_UP)
-        m_Camera->Rotate(m_Camera->GetRight(), -1.0f);
-
-    if (key == VK_DOWN)
-        m_Camera->Rotate(m_Camera->GetRight(), 1.0f);
-
-    if (key == VK_LEFT)
-        m_Camera->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, -1.0f);
-
-    if (key == VK_RIGHT)
-        m_Camera->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, 1.0f);
-
     if (key == 'W')
     {
         const DirectX::XMVECTOR forward(m_Camera->GetForward());
@@ -89,13 +77,48 @@ void Game::OnKeyUp(Context& context, unsigned int key)
 { }
 
 void Game::OnMouseDown(Context& context, unsigned int key)
-{ }
+{
+    Window& window = context.GetWindow();
+
+    if (!m_IsLeftMouseButtonPressed && key == VK_LBUTTON)
+    {
+        m_IsLeftMouseButtonPressed = true;
+        window.DrawCursor(false);
+
+        POINT cursorPosition(window.GetCursorPosition());
+        m_MouseX = cursorPosition.x;
+        m_MouseY = cursorPosition.y;
+    }
+}
 
 void Game::OnMouseUp(Context& context, unsigned int key)
-{ }
+{
+    Window& window = context.GetWindow();
+
+    if (m_IsLeftMouseButtonPressed && key == VK_LBUTTON)
+    {
+        m_IsLeftMouseButtonPressed = false;
+        window.DrawCursor(true);
+    }
+}
 
 void Game::OnMouseMove(Context& context, int x, int y)
-{ }
+{
+    if (m_IsLeftMouseButtonPressed)
+    {
+        int xDelta = x - m_MouseX;
+        int yDelta = y - m_MouseY;
+
+        if (xDelta != 0)
+            m_Camera->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, static_cast<float>(xDelta) * 0.25f);
+
+        if (yDelta != 0)
+            m_Camera->Rotate(m_Camera->GetRight(), static_cast<float>(yDelta) * 0.25f);
+
+        m_MouseX = x;
+        m_MouseY = y;
+    }
+}
 
 void Game::Update(Context& context)
 {
