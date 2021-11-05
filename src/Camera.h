@@ -57,10 +57,10 @@ private:
     void UpdateView();
     void UpdateProjection();
 
-    DirectX::XMVECTOR m_Position{ 0.0f, 0.0f, 0.0f, 1.0f }; // Zero
-    DirectX::XMVECTOR m_Right{ 1.0f, 0.0f, 0.0f, 0.0f };    // X
-    DirectX::XMVECTOR m_Up{ 0.0f, 1.0f, 0.0f, 0.0f };       // Y
-    DirectX::XMVECTOR m_Forward{ 0.0f, 0.0f, 1.0f, 0.0f };  // Z
+    DirectX::XMVECTOR m_Position{ DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f) }; // Zero
+    DirectX::XMVECTOR m_Right{ DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f) };    // X
+    DirectX::XMVECTOR m_Up{ DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f) };       // Y
+    DirectX::XMVECTOR m_Forward{ DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f) };  // Z
 
     float m_Fov{ 90.0f };
     float m_AspectRatio{ 1.0f };

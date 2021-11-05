@@ -56,8 +56,8 @@ private:
     void UpdateWorld();
 
     DirectX::XMMATRIX m_Rotataion{ DirectX::XMMatrixIdentity() };
-    DirectX::XMVECTOR m_Scaling{ 1.0f, 1.0f, 1.0f, 1.0f };
-    DirectX::XMVECTOR m_Position{ 0.0f, 0.0f, 0.0f, 1.0f };
+    DirectX::XMVECTOR m_Scaling{ DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f) };
+    DirectX::XMVECTOR m_Position{ DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f) };
 
     DirectX::XMMATRIX m_World{ DirectX::XMMatrixIdentity() };
 
