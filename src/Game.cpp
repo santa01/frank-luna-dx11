@@ -30,12 +30,23 @@ void Game::Start(Context& context)
     m_Camera.reset(new Camera());
     m_Camera->SetAspectRatio(window.GetAspectRatio());
 
-    m_Camera->Move({ 2.0f, 2.0f, -3.0f, 0.0f });
-    m_Camera->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, -35.0f);
+    m_Camera->Move(DirectX::XMVectorSet(4.0f, 3.0f, -3.0f, 0.0f));
+    m_Camera->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), -30.0f);
     m_Camera->Rotate(m_Camera->GetRight(), 30.0f);
 
     m_Shader.reset(new Shader(context, "Shader.fx"));
-    m_Mesh.reset(new Mesh(context));
+
+    auto& mesh1 = m_Meshes.emplace_back(new Mesh(context));
+    mesh1->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), 35.0f);
+
+    auto& mesh2 = m_Meshes.emplace_back(new Mesh(context));
+    mesh2->Scale(DirectX::XMVectorSet(0.75f, 0.75f, 0.75f, 1.0f));
+    mesh2->Move(DirectX::XMVectorSet(0.0f, 0.0f, 5.0f, 0.0f));
+
+    auto& mesh3 = m_Meshes.emplace_back(new Mesh(context));
+    mesh3->Rotate(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), 45.0f);
+    mesh3->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 15.0f);
+    mesh3->Move(DirectX::XMVectorSet(3.0f, 0.0f, 3.0f, 0.0f));
 
     context.OnKeyDown.Connect(std::bind(&Game::OnKeyDown, this, std::placeholders::_1, std::placeholders::_2));
     context.OnKeyUp.Connect(std::bind(&Game::OnKeyUp, this, std::placeholders::_1, std::placeholders::_2));
@@ -48,46 +59,7 @@ void Game::Shutdown(Context& context)
 { }
 
 void Game::OnKeyDown(Context& context, unsigned int key)
-{
-    bool isShiftPressed = GetAsyncKeyState(VK_SHIFT);
-    bool isControlPressed = GetAsyncKeyState(VK_CONTROL);
-
-    if (key == '1' || key == '2') // X
-    {
-        bool isRight = (key == '2');
-
-        if (isShiftPressed)
-            m_Mesh->Scale({ isRight ? 1.25f : 0.8f, 1.0f, 1.0f, 1.0f });
-        else if (isControlPressed)
-            m_Mesh->Rotate({ 1.0f, 0.0f, 0.0f, 0.0f }, isRight ? 5.0f : -5.0f);
-        else
-            m_Mesh->Move({ isRight ? 0.25f : -0.25f, 0.0f, 0.0f, 0.0f });
-    }
-
-    if (key == '3' || key == '4') // Y
-    {
-        bool isUp = (key == '4');
-
-        if (isShiftPressed)
-            m_Mesh->Scale({ 1.0f, isUp ? 1.25f : 0.8f, 1.0f, 1.0f });
-        else if (isControlPressed)
-            m_Mesh->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, isUp ? 5.0f : -5.0f);
-        else
-            m_Mesh->Move({ 0.0f, isUp ? 0.25f : -0.25f, 0.0f, 0.0f });
-    }
-
-    if (key == '5' || key == '6') // Z
-    {
-        bool isForward = (key == '6');
-
-        if (isShiftPressed)
-            m_Mesh->Scale({ 1.0f, 1.0f, isForward ? 1.25f : 0.8f, 1.0f });
-        else if (isControlPressed)
-            m_Mesh->Rotate({ 0.0f, 0.0f, 1.0f, 0.0f }, isForward ? 5.0f : -5.0f);
-        else
-            m_Mesh->Move({ 0.0f, 0.0f, isForward ? 0.25f : -0.25f, 0.0f });
-    }
-}
+{ }
 
 void Game::OnKeyUp(Context& context, unsigned int key)
 { }
@@ -171,10 +143,14 @@ void Game::Update(Context& context)
         context.Terminate();
 
     DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection());
-    DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(m_Mesh->GetWorld(), vp);
-
-    m_Shader->SetWVP(wvp);
     m_Shader->Enable(context);
 
-    m_Mesh->Draw(context);
+    for (auto& mesh : m_Meshes)
+    {
+        DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(mesh->GetWorld(), vp);
+        m_Shader->SetWVP(wvp);
+        m_Shader->Update(context);
+
+        mesh->Draw(context);
+    }
 }

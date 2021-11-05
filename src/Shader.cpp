@@ -125,7 +125,10 @@ void Shader::Enable(Context& context)
 
     deviceContext.IASetInputLayout(m_InputLayout.Get()); // Input Assembly
     deviceContext.VSSetConstantBuffers(0, 1, m_TransformBuffer.GetAddressOf());
+}
 
+void Shader::Update(Context& context)
+{
     UpdateVertexTransform(context);
 }
 

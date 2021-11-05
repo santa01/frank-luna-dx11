@@ -27,6 +27,7 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include <memory>
+#include <vector>
 
 class Context;
 
@@ -47,7 +48,7 @@ public:
 private:
     std::unique_ptr<Camera> m_Camera;
     std::unique_ptr<Shader> m_Shader;
-    std::unique_ptr<Mesh> m_Mesh;
+    std::vector<std::unique_ptr<Mesh>> m_Meshes;
 
     bool m_IsLeftMouseButtonPressed{ false };
     int m_MouseX{ 0 };

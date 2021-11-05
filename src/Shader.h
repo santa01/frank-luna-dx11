@@ -38,6 +38,7 @@ public:
     void SetWVP(const DirectX::XMMATRIX& wvp);
 
     void Enable(Context& context);
+    void Update(Context& context);
 
 private:
     void UpdateVertexTransform(Context& context);
