@@ -26,19 +26,45 @@
 #include <windows.h>
 #include <cassert>
 
+namespace {
+
+    Vertex g_Vertices[] =
+    {
+        { { -1.0f,  1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }, // 0
+        { {  1.0f,  1.0f, -1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } }, // 1
+        { {  1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }, // 2
+        { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f } }, // 3
+        { {  1.0f,  1.0f,  1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }, // 4
+        { { -1.0f,  1.0f,  1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } }, // 5
+        { { -1.0f, -1.0f,  1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }, // 6
+        { {  1.0f, -1.0f,  1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f } }  // 7
+    };
+
+    UINT g_Indices[] =
+    {
+        0, 1, 2, 0, 2, 3, // Front
+        4, 5, 6, 4, 6, 7, // Back
+        1, 4, 7, 1, 7, 2, // Right
+        5, 0, 3, 5, 3, 6, // Left
+        0, 5, 4, 0, 4, 1, // Top
+        6, 3, 2, 6, 2, 7  // Bottom
+    };
+
+};
+
 Mesh::Mesh(Context& context)
 {
     ID3D11Device& device = context.GetDevice().GetHandle();
 
     {
         D3D11_BUFFER_DESC vertexBufferDesc{ };
-        vertexBufferDesc.ByteWidth = sizeof(m_Vertices);
-        vertexBufferDesc.StructureByteStride = sizeof(m_Vertices[0]);
+        vertexBufferDesc.ByteWidth = sizeof(g_Vertices);
+        vertexBufferDesc.StructureByteStride = sizeof(g_Vertices[0]);
         vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
         vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
         D3D11_SUBRESOURCE_DATA vertexBufferData{ };
-        vertexBufferData.pSysMem = m_Vertices;
+        vertexBufferData.pSysMem = g_Vertices;
 
         HRESULT hr = device.CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_VertexBuffer);
         assert(SUCCEEDED(hr));
@@ -46,13 +72,13 @@ Mesh::Mesh(Context& context)
 
     {
         D3D11_BUFFER_DESC indexBufferDesc{ };
-        indexBufferDesc.ByteWidth = sizeof(m_Indices);
-        indexBufferDesc.StructureByteStride = sizeof(m_Indices[0]);
+        indexBufferDesc.ByteWidth = sizeof(g_Indices);
+        indexBufferDesc.StructureByteStride = sizeof(g_Indices[0]);
         indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
         indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
         D3D11_SUBRESOURCE_DATA indexBufferData{ };
-        indexBufferData.pSysMem = m_Indices;
+        indexBufferData.pSysMem = g_Indices;
 
         HRESULT hr = device.CreateBuffer(&indexBufferDesc, &indexBufferData, &m_IndexBuffer);
         assert(SUCCEEDED(hr));
@@ -106,7 +132,7 @@ void Mesh::Draw(Context& context) const
 
     {
         ID3D11Buffer* buffers[] = { m_VertexBuffer.Get() };
-        UINT strides[] = { sizeof(m_Vertices[0]) };
+        UINT strides[] = { sizeof(g_Vertices[0]) };
         UINT offsets[] = { 0 };
 
         deviceContext.IASetVertexBuffers(0, 1, buffers, strides, offsets); // Input Assembly
@@ -114,7 +140,7 @@ void Mesh::Draw(Context& context) const
         deviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // Input Assembly
     }
 
-    deviceContext.DrawIndexed(sizeof(m_Indices) / sizeof(m_Indices[0]), 0, 0);
+    deviceContext.DrawIndexed(sizeof(g_Indices) / sizeof(g_Indices[0]), 0, 0);
 }
 
 void Mesh::UpdateWorld()

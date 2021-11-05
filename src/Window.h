@@ -38,6 +38,7 @@ public:
 
     FLOAT GetAspectRatio() const;
     POINT GetCursorPosition() const;
+    const BYTE* GetKeyboardState() const;
 
     void DrawCursor(BOOL draw) const;
     void Update(Context& context);
@@ -54,4 +55,6 @@ private:
     ATOM m_Class{ 0 };
     HWND m_Handle{ nullptr };
     HINSTANCE m_Instance{ nullptr };
+
+    BYTE m_KeyboardState[256] = { };
 };

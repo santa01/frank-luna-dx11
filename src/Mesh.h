@@ -28,6 +28,12 @@
 
 class Context;
 
+struct Vertex final
+{
+    DirectX::XMFLOAT3 Position;
+    DirectX::XMFLOAT4 Color;
+};
+
 class Mesh final
 {
 public:
@@ -54,24 +60,6 @@ private:
     DirectX::XMVECTOR m_Position{ 0.0f, 0.0f, 0.0f, 1.0f };
 
     DirectX::XMMATRIX m_World{ DirectX::XMMatrixIdentity() };
-
-    struct Vertex
-    {
-        DirectX::XMFLOAT3 Position;
-        DirectX::XMFLOAT4 Color;
-    };
-
-    static constexpr Vertex m_Vertices[] =
-    {
-        { {  0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-        { {  1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-        { { -1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
-    };
-
-    static constexpr UINT m_Indices[] =
-    {
-        0, 1, 2 // Clockwise
-    };
 
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_VertexBuffer;
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_IndexBuffer;

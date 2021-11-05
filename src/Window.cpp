@@ -59,6 +59,8 @@ Window::Window(Context& context)
         m_Handle = CreateWindowEx(0, m_WindowClass, params.m_WindowCaption.c_str(), m_WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, nullptr, nullptr, m_Instance, nullptr);
         if (!m_Handle)
             throw std::runtime_error("Failed to create window");
+
+        SetWindowLongPtr(m_Handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&context));
     }
 
     ShowWindow(m_Handle, SW_SHOW);
@@ -102,6 +104,11 @@ POINT Window::GetCursorPosition() const
     return cursorPosition;
 }
 
+const BYTE* Window::GetKeyboardState() const
+{
+    return m_KeyboardState;
+}
+
 void Window::DrawCursor(BOOL draw) const
 {
     ShowCursor(draw);
@@ -109,8 +116,6 @@ void Window::DrawCursor(BOOL draw) const
 
 void Window::Update(Context& context)
 {
-    SetWindowLongPtr(m_Handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&context));
-
     MSG msg{ };
     while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
     {
@@ -122,13 +127,19 @@ void Window::Update(Context& context)
 
 LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    Context& context = *reinterpret_cast<Context*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    LONG_PTR userData = GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    if (userData == 0)
+        return DefWindowProc(hWnd, uMsg, wParam, lParam);
+
+    Context& context = *reinterpret_cast<Context*>(userData);
+    Window& window = context.GetWindow();
 
     switch (uMsg)
     {
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
     {
+        window.m_KeyboardState[wParam] = true;
         context.OnKeyDown(context, static_cast<unsigned int>(wParam));
         return 0;
     }
@@ -136,6 +147,7 @@ LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     case WM_KEYUP:
     case WM_SYSKEYUP:
     {
+        window.m_KeyboardState[wParam] = false;
         context.OnKeyUp(context, static_cast<unsigned int>(wParam));
         return 0;
     }
