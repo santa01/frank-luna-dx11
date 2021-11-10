@@ -20,48 +20,29 @@
  * SOFTWARE.
  */
 
-// https://docs.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-getting-started?redirectedfrom=MSDN#matrix-convention
-#pragma pack_matrix(row_major) // DirectXMath uses row-major matrices
+#pragma once
 
-struct VertexOutput
+#include <d3d11.h>
+#include <wrl/client.h>
+
+class DX11Device;
+
+class Buffer
 {
-    // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics
-    float4 position : SV_POSITION; // System Value
-    float4 color : COLOR;
+public:
+    virtual ~Buffer() = default;
+    virtual void Enable(DX11Device& device) = 0;
 };
 
-#ifdef VERTEX_SHADER
-
-cbuffer VertexTransform
+class FrameBuffer final : public Buffer
 {
-    float4x4 wvp; // World - View - Projection
+public:
+    FrameBuffer(DX11Device& device);
+    void Enable(DX11Device& device) override;
+
+private:
+    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilTexture;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
 };
-
-struct VertexInput
-{
-    float3 position : POSITION;
-    float4 color : COLOR;
-};
-
-VertexOutput Main(VertexInput vertex)
-{
-    VertexOutput output;
-
-    float4 position = float4(vertex.position, 1.0f);
-    output.position = mul(position, wvp);
-    output.color = vertex.color;
-
-    return output;
-}
-
-#endif // VERTEX_SHADER
-
-#ifdef PIXEL_SHADER
-
-// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics
-float4 Main(VertexOutput vertex) : SV_Target // System Value
-{
-    return vertex.color;
-}
-
-#endif // PIXEL_SHADER

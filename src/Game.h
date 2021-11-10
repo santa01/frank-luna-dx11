@@ -36,6 +36,7 @@ class Game final : public Application
 public:
     void Start(Context& context) override;
     void Shutdown(Context& context) override;
+    void Update(Context& context) override;
 
     void OnKeyDown(Context& context, unsigned int key);
     void OnKeyUp(Context& context, unsigned int key);
@@ -43,11 +44,12 @@ public:
     void OnMouseUp(Context& context, unsigned int key);
     void OnMouseMove(Context& context, int x, int y);
 
-    void Update(Context& context) override;
+    void RenderFrame(Context& context) override;
 
 private:
     std::unique_ptr<Camera> m_Camera;
-    std::unique_ptr<Shader> m_Shader;
+    std::unique_ptr<Shader> m_FrameShader;
+
     std::vector<std::unique_ptr<Mesh>> m_Meshes;
 
     bool m_IsLeftMouseButtonPressed{ false };

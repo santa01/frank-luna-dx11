@@ -22,9 +22,11 @@
 
 #pragma once
 
+#include "Buffer.h"
 #include <d3d11.h>
 #include <dxgi1_2.h>
 #include <wrl/client.h>
+#include <memory>
 
 class Context;
 
@@ -35,6 +37,7 @@ public:
 
     ID3D11Device& GetHandle() const;
     ID3D11DeviceContext& GetContext() const;
+    IDXGISwapChain1& GetSwapChain() const;
 
     void FrameBegin(Context& context);
     void FrameEnd(Context& context);
@@ -44,7 +47,5 @@ private:
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_D3D11DeviceContext;
     Microsoft::WRL::ComPtr<IDXGISwapChain1> m_D3D11SwapChain1;
 
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilTexture;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
+    std::unique_ptr<FrameBuffer> m_FrameBuffer;
 };

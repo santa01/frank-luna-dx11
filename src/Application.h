@@ -31,6 +31,7 @@ public:
 
     virtual void Start(Context& context);
     virtual void Shutdown(Context& context);
+    virtual void Update(Context& context);
 
-    virtual void Update(Context& context) = 0;
+    virtual void RenderFrame(Context& context) = 0;
 };

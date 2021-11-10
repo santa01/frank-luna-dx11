@@ -35,7 +35,7 @@ void Game::Start(Context& context)
     m_Camera->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), -30.0f);
     m_Camera->Rotate(m_Camera->GetRight(), 30.0f);
 
-    m_Shader.reset(new Shader(device, "Shader.fx"));
+    m_FrameShader.reset(new Shader(device, "Frame.fx"));
 
     auto& mesh1 = m_Meshes.emplace_back(new Mesh(device));
     mesh1->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), 35.0f);
@@ -58,6 +58,41 @@ void Game::Start(Context& context)
 
 void Game::Shutdown(Context& context)
 { }
+
+void Game::Update(Context& context)
+{
+    Window& window = context.GetWindow();
+
+    const BYTE* keyboardState = window.GetKeyboardState();
+    float moveStep = context.GetFrameTime() * 2.0f;
+
+    if (keyboardState['W'])
+    {
+        const DirectX::XMVECTOR& forward = m_Camera->GetForward();
+        m_Camera->Move(DirectX::XMVectorScale(forward, moveStep));
+    }
+
+    if (keyboardState['S'])
+    {
+        const DirectX::XMVECTOR& forward = m_Camera->GetForward();
+        m_Camera->Move(DirectX::XMVectorScale(forward, -moveStep));
+    }
+
+    if (keyboardState['A'])
+    {
+        const DirectX::XMVECTOR& right = m_Camera->GetRight();
+        m_Camera->Move(DirectX::XMVectorScale(right, -moveStep));
+    }
+
+    if (keyboardState['D'])
+    {
+        const DirectX::XMVECTOR& right = m_Camera->GetRight();
+        m_Camera->Move(DirectX::XMVectorScale(right, moveStep));
+    }
+
+    if (keyboardState[VK_ESCAPE])
+        context.Terminate();
+}
 
 void Game::OnKeyDown(Context& context, unsigned int key)
 { }
@@ -109,49 +144,18 @@ void Game::OnMouseMove(Context& context, int x, int y)
     }
 }
 
-void Game::Update(Context& context)
+void Game::RenderFrame(Context& context)
 {
-    Window& window = context.GetWindow();
     DX11Device& device = context.GetDevice();
 
-    const BYTE* keyboardState = window.GetKeyboardState();
-    float moveStep = context.GetFrameTime() * 2.0f;
-
-    if (keyboardState['W'])
-    {
-        const DirectX::XMVECTOR& forward = m_Camera->GetForward();
-        m_Camera->Move(DirectX::XMVectorScale(forward, moveStep));
-    }
-
-    if (keyboardState['S'])
-    {
-        const DirectX::XMVECTOR& forward = m_Camera->GetForward();
-        m_Camera->Move(DirectX::XMVectorScale(forward, -moveStep));
-    }
-
-    if (keyboardState['A'])
-    {
-        const DirectX::XMVECTOR& right = m_Camera->GetRight();
-        m_Camera->Move(DirectX::XMVectorScale(right, -moveStep));
-    }
-
-    if (keyboardState['D'])
-    {
-        const DirectX::XMVECTOR& right = m_Camera->GetRight();
-        m_Camera->Move(DirectX::XMVectorScale(right, moveStep));
-    }
-
-    if (keyboardState[VK_ESCAPE])
-        context.Terminate();
-
     DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection());
-    m_Shader->Enable(device);
+    m_FrameShader->Enable(device);
 
     for (auto& mesh : m_Meshes)
     {
         DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(mesh->GetWorld(), vp);
-        m_Shader->SetWVP(wvp);
-        m_Shader->Update(device);
+        m_FrameShader->SetWVP(wvp);
+        m_FrameShader->Update(device);
 
         mesh->Draw(device);
     }

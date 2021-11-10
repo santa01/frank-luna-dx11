@@ -81,34 +81,7 @@ DX11Device::DX11Device(Context& context)
         assert(SUCCEEDED(hr));
     }
 
-    {
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> pBackBuffer;
-
-        HRESULT hr = m_D3D11SwapChain1->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-        assert(SUCCEEDED(hr));
-
-        hr = m_D3D11Device->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &m_RenderTargetView);
-        assert(SUCCEEDED(hr));
-    }
-
-    {
-        D3D11_TEXTURE2D_DESC depthStencilDesc{ };
-        depthStencilDesc.Width = window.GetWidth();
-        depthStencilDesc.Height = window.GetHeight();
-        depthStencilDesc.MipLevels = 1;
-        depthStencilDesc.ArraySize = 1;
-        depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-        depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-        depthStencilDesc.SampleDesc.Count = 1;
-        depthStencilDesc.SampleDesc.Quality = 0;
-
-        HRESULT hr = m_D3D11Device->CreateTexture2D(&depthStencilDesc, 0, &m_DepthStencilTexture);
-        assert(SUCCEEDED(hr));
-
-        hr = m_D3D11Device->CreateDepthStencilView(m_DepthStencilTexture.Get(), nullptr, &m_DepthStencilView);
-        assert(SUCCEEDED(hr));
-    }
+    m_FrameBuffer.reset(new FrameBuffer(*this));
 }
 
 ID3D11Device& DX11Device::GetHandle() const
@@ -119,6 +92,11 @@ ID3D11Device& DX11Device::GetHandle() const
 ID3D11DeviceContext& DX11Device::GetContext() const
 {
     return *m_D3D11DeviceContext.Get();
+}
+
+IDXGISwapChain1& DX11Device::GetSwapChain() const
+{
+    return *m_D3D11SwapChain1.Get();
 }
 
 void DX11Device::FrameBegin(Context& context)
@@ -133,14 +111,9 @@ void DX11Device::FrameBegin(Context& context)
         viewport.MaxDepth = 1.0f;
 
         m_D3D11DeviceContext->RSSetViewports(1, &viewport); // Rasterizer Stage
-        m_D3D11DeviceContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_DepthStencilView.Get()); // Output Merger
     }
 
-    {
-        FLOAT red[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-        m_D3D11DeviceContext->ClearRenderTargetView(m_RenderTargetView.Get(), red);
-        m_D3D11DeviceContext->ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    }
+    m_FrameBuffer->Enable(*this);
 }
 
 void DX11Device::FrameEnd(Context& context)

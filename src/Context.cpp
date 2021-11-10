@@ -61,9 +61,10 @@ void Context::Run()
         auto frameBegin = std::chrono::high_resolution_clock::now();
 
         m_Window->Update(*this);
+        m_Application->Update(*this);
 
         m_Device->FrameBegin(*this);
-        m_Application->Update(*this);
+        m_Application->RenderFrame(*this);
         m_Device->FrameEnd(*this);
 
         auto frameEnd = std::chrono::high_resolution_clock::now();
