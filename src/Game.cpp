@@ -26,6 +26,7 @@
 void Game::Start(Context& context)
 {
     Window& window = context.GetWindow();
+    DX11Device& device = context.GetDevice();
 
     m_Camera.reset(new Camera());
     m_Camera->SetAspectRatio(window.GetAspectRatio());
@@ -34,16 +35,16 @@ void Game::Start(Context& context)
     m_Camera->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), -30.0f);
     m_Camera->Rotate(m_Camera->GetRight(), 30.0f);
 
-    m_Shader.reset(new Shader(context, "Shader.fx"));
+    m_Shader.reset(new Shader(device, "Shader.fx"));
 
-    auto& mesh1 = m_Meshes.emplace_back(new Mesh(context));
+    auto& mesh1 = m_Meshes.emplace_back(new Mesh(device));
     mesh1->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), 35.0f);
 
-    auto& mesh2 = m_Meshes.emplace_back(new Mesh(context));
+    auto& mesh2 = m_Meshes.emplace_back(new Mesh(device));
     mesh2->Scale(DirectX::XMVectorSet(0.75f, 0.75f, 0.75f, 1.0f));
     mesh2->Move(DirectX::XMVectorSet(0.0f, 0.0f, 5.0f, 0.0f));
 
-    auto& mesh3 = m_Meshes.emplace_back(new Mesh(context));
+    auto& mesh3 = m_Meshes.emplace_back(new Mesh(device));
     mesh3->Rotate(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), 45.0f);
     mesh3->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 15.0f);
     mesh3->Move(DirectX::XMVectorSet(3.0f, 0.0f, 3.0f, 0.0f));
@@ -111,6 +112,7 @@ void Game::OnMouseMove(Context& context, int x, int y)
 void Game::Update(Context& context)
 {
     Window& window = context.GetWindow();
+    DX11Device& device = context.GetDevice();
 
     const BYTE* keyboardState = window.GetKeyboardState();
     float moveStep = context.GetFrameTime() * 2.0f;
@@ -143,14 +145,14 @@ void Game::Update(Context& context)
         context.Terminate();
 
     DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection());
-    m_Shader->Enable(context);
+    m_Shader->Enable(device);
 
     for (auto& mesh : m_Meshes)
     {
         DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(mesh->GetWorld(), vp);
         m_Shader->SetWVP(wvp);
-        m_Shader->Update(context);
+        m_Shader->Update(device);
 
-        mesh->Draw(context);
+        mesh->Draw(device);
     }
 }

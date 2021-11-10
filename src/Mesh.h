@@ -26,7 +26,7 @@
 #include <wrl/client.h>
 #include <DirectXMath.h>
 
-class Context;
+class DX11Device;
 
 struct Vertex final
 {
@@ -37,7 +37,7 @@ struct Vertex final
 class Mesh final
 {
 public:
-    Mesh(Context& context);
+    Mesh(DX11Device& device);
 
     const DirectX::XMMATRIX& GetRotation() const;
     void Rotate(const DirectX::XMVECTOR& axis, float angle);
@@ -50,7 +50,7 @@ public:
 
     const DirectX::XMMATRIX& GetWorld() const;
 
-    void Draw(Context& context) const;
+    void Draw(DX11Device& device) const;
 
 private:
     void UpdateWorld();

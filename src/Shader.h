@@ -27,21 +27,21 @@
 #include <DirectXMath.h>
 #include <string>
 
-class Context;
+class DX11Device;
 
 class Shader final
 {
 public:
-    Shader(Context& context, const std::string& source);
+    Shader(DX11Device& device, const std::string& source);
 
     const DirectX::XMMATRIX& GetWVP() const;
     void SetWVP(const DirectX::XMMATRIX& wvp);
 
-    void Enable(Context& context);
-    void Update(Context& context);
+    void Enable(DX11Device& device);
+    void Update(DX11Device& device);
 
 private:
-    void UpdateVertexTransform(Context& context);
+    void UpdateVertexTransform(DX11Device& device);
 
     // If the bind flag is D3D11_BIND_CONSTANT_BUFFER, you must set the ByteWidth value in multiples of 16
     // https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_buffer_desc

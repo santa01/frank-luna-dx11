@@ -103,10 +103,10 @@ DX11Device::DX11Device(Context& context)
         depthStencilDesc.SampleDesc.Count = 1;
         depthStencilDesc.SampleDesc.Quality = 0;
 
-        HRESULT hr = m_D3D11Device->CreateTexture2D(&depthStencilDesc, 0, &m_DepthStencilBuffer);
+        HRESULT hr = m_D3D11Device->CreateTexture2D(&depthStencilDesc, 0, &m_DepthStencilTexture);
         assert(SUCCEEDED(hr));
 
-        hr = m_D3D11Device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), nullptr, &m_DepthStencilView);
+        hr = m_D3D11Device->CreateDepthStencilView(m_DepthStencilTexture.Get(), nullptr, &m_DepthStencilView);
         assert(SUCCEEDED(hr));
     }
 }

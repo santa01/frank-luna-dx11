@@ -22,7 +22,6 @@
 
 #include "Mesh.h"
 #include "Device.h"
-#include "Context.h"
 #include <windows.h>
 #include <cassert>
 
@@ -52,9 +51,9 @@ namespace {
 
 };
 
-Mesh::Mesh(Context& context)
+Mesh::Mesh(DX11Device& device)
 {
-    ID3D11Device& device = context.GetDevice().GetHandle();
+    ID3D11Device& deviceHandle = device.GetHandle();
 
     {
         D3D11_BUFFER_DESC vertexBufferDesc{ };
@@ -66,7 +65,7 @@ Mesh::Mesh(Context& context)
         D3D11_SUBRESOURCE_DATA vertexBufferData{ };
         vertexBufferData.pSysMem = g_Vertices;
 
-        HRESULT hr = device.CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_VertexBuffer);
+        HRESULT hr = deviceHandle.CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_VertexBuffer);
         assert(SUCCEEDED(hr));
     }
 
@@ -80,7 +79,7 @@ Mesh::Mesh(Context& context)
         D3D11_SUBRESOURCE_DATA indexBufferData{ };
         indexBufferData.pSysMem = g_Indices;
 
-        HRESULT hr = device.CreateBuffer(&indexBufferDesc, &indexBufferData, &m_IndexBuffer);
+        HRESULT hr = deviceHandle.CreateBuffer(&indexBufferDesc, &indexBufferData, &m_IndexBuffer);
         assert(SUCCEEDED(hr));
     }
 
@@ -126,9 +125,9 @@ const DirectX::XMMATRIX& Mesh::GetWorld() const
     return m_World;
 }
 
-void Mesh::Draw(Context& context) const
+void Mesh::Draw(DX11Device& device) const
 {
-    ID3D11DeviceContext& deviceContext = context.GetDevice().GetContext();
+    ID3D11DeviceContext& deviceContext = device.GetContext();
 
     {
         ID3D11Buffer* buffers[] = { m_VertexBuffer.Get() };

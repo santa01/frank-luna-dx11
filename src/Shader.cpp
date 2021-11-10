@@ -21,16 +21,16 @@
  */
 
 #include "Shader.h"
-#include "Context.h"
+#include "Device.h"
 #include <windows.h>
 #include <d3dcompiler.h>
 #include <fstream>
 #include <stdexcept>
 #include <cassert>
 
-Shader::Shader(Context& context, const std::string& source)
+Shader::Shader(DX11Device& device, const std::string& source)
 {
-    ID3D11Device& device = context.GetDevice().GetHandle();
+    ID3D11Device& deviceHandle = device.GetHandle();
 
     std::ifstream sourceFile(source, std::ios::in | std::ios::binary);
     if (!sourceFile)
@@ -64,7 +64,7 @@ Shader::Shader(Context& context, const std::string& source)
             throw std::runtime_error("Failed to compile shader: " + error);
         }
 
-        hr = device.CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &m_VertexShader);
+        hr = deviceHandle.CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &m_VertexShader);
         assert(SUCCEEDED(hr));
 
         D3D11_INPUT_ELEMENT_DESC inputDesc[] =
@@ -73,7 +73,7 @@ Shader::Shader(Context& context, const std::string& source)
             { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 } // Offset for R32G32B32
         };
 
-        hr = device.CreateInputLayout(inputDesc, 2, shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), &m_InputLayout);
+        hr = deviceHandle.CreateInputLayout(inputDesc, 2, shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), &m_InputLayout);
         assert(SUCCEEDED(hr));
     }
 
@@ -90,7 +90,7 @@ Shader::Shader(Context& context, const std::string& source)
             throw std::runtime_error("Failed to compile shader: " + error);
         }
 
-        hr = device.CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &m_PixelShader);
+        hr = deviceHandle.CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &m_PixelShader);
         assert(SUCCEEDED(hr));
     }
 
@@ -101,7 +101,7 @@ Shader::Shader(Context& context, const std::string& source)
         desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-        HRESULT hr = device.CreateBuffer(&desc, nullptr, &m_TransformBuffer);
+        HRESULT hr = deviceHandle.CreateBuffer(&desc, nullptr, &m_TransformBuffer);
         assert(SUCCEEDED(hr));
     }
 }
@@ -116,9 +116,9 @@ void Shader::SetWVP(const DirectX::XMMATRIX& wvp)
     m_VertexTransform.m_WVP = wvp;
 }
 
-void Shader::Enable(Context& context)
+void Shader::Enable(DX11Device& device)
 {
-    ID3D11DeviceContext& deviceContext = context.GetDevice().GetContext();
+    ID3D11DeviceContext& deviceContext = device.GetContext();
 
     deviceContext.VSSetShader(m_VertexShader.Get(), nullptr, 0);
     deviceContext.PSSetShader(m_PixelShader.Get(), nullptr, 0);
@@ -127,14 +127,14 @@ void Shader::Enable(Context& context)
     deviceContext.VSSetConstantBuffers(0, 1, m_TransformBuffer.GetAddressOf());
 }
 
-void Shader::Update(Context& context)
+void Shader::Update(DX11Device& device)
 {
-    UpdateVertexTransform(context);
+    UpdateVertexTransform(device);
 }
 
-void Shader::UpdateVertexTransform(Context& context)
+void Shader::UpdateVertexTransform(DX11Device& device)
 {
-    ID3D11DeviceContext& deviceContext = context.GetDevice().GetContext();
+    ID3D11DeviceContext& deviceContext = device.GetContext();
 
     {
         D3D11_MAPPED_SUBRESOURCE mappedSubresource{ };
