@@ -23,6 +23,7 @@
 #pragma once
 
 #include "Buffer.h"
+#include "Shader.h"
 #include <d3d11.h>
 #include <dxgi1_2.h>
 #include <wrl/client.h>
@@ -39,6 +40,11 @@ public:
     ID3D11DeviceContext& GetContext() const;
     IDXGISwapChain1& GetSwapChain() const;
 
+    Shader& GetGeometryShader() const;
+    Shader& GetFrameShader() const;
+
+    void GeometryBegin(Context& context);
+    void GeometryEnd(Context& context);
     void FrameBegin(Context& context);
     void FrameEnd(Context& context);
 
@@ -47,5 +53,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_D3D11DeviceContext;
     Microsoft::WRL::ComPtr<IDXGISwapChain1> m_D3D11SwapChain1;
 
+    std::unique_ptr<GeometryBuffer> m_GeometryBuffer;
     std::unique_ptr<FrameBuffer> m_FrameBuffer;
+
+    std::unique_ptr<Shader> m_GeometryShader;
+    std::unique_ptr<Shader> m_FrameShader;
 };

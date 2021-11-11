@@ -81,7 +81,11 @@ DX11Device::DX11Device(Context& context)
         assert(SUCCEEDED(hr));
     }
 
+    m_GeometryBuffer.reset(new GeometryBuffer(*this));
     m_FrameBuffer.reset(new FrameBuffer(*this));
+
+    m_GeometryShader.reset(new Shader(*this, "Geometry.fx"));
+    m_FrameShader.reset(new Shader(*this, "Frame.fx"));
 }
 
 ID3D11Device& DX11Device::GetHandle() const
@@ -99,7 +103,17 @@ IDXGISwapChain1& DX11Device::GetSwapChain() const
     return *m_D3D11SwapChain1.Get();
 }
 
-void DX11Device::FrameBegin(Context& context)
+Shader& DX11Device::GetGeometryShader() const
+{
+    return *m_GeometryShader.get();
+}
+
+Shader& DX11Device::GetFrameShader() const
+{
+    return *m_FrameShader.get();
+}
+
+void DX11Device::GeometryBegin(Context& context)
 {
     Window& window = context.GetWindow();
 
@@ -113,11 +127,27 @@ void DX11Device::FrameBegin(Context& context)
         m_D3D11DeviceContext->RSSetViewports(1, &viewport); // Rasterizer Stage
     }
 
+    m_GeometryShader->Enable(*this);
+    m_GeometryBuffer->Enable(*this);
+}
+
+void DX11Device::GeometryEnd(Context& context)
+{
+    m_GeometryBuffer->Disable(*this);
+}
+
+void DX11Device::FrameBegin(Context& context)
+{
+    m_FrameShader->Enable(*this);
     m_FrameBuffer->Enable(*this);
+    m_GeometryBuffer->EnableGeometry(*this);
 }
 
 void DX11Device::FrameEnd(Context& context)
 {
     DXGI_PRESENT_PARAMETERS params{ };
     m_D3D11SwapChain1->Present1(0, 0, &params);
+
+    m_GeometryBuffer->DisableGeometry(*this);
+    m_FrameBuffer->Disable(*this);
 }

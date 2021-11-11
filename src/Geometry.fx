@@ -20,39 +20,60 @@
  * SOFTWARE.
  */
 
-#pragma once
+#pragma pack_matrix(row_major) // DirectXMath uses row-major matrices
 
-#include "Application.h"
-#include "Camera.h"
-#include "Mesh.h"
-#include <memory>
-#include <vector>
+#ifdef VERTEX_SHADER
 
-class Context;
-
-class Game final : public Application
+cbuffer VertexTransform : register(b0)
 {
-public:
-    void Start(Context& context) override;
-    void Shutdown(Context& context) override;
-    void Update(Context& context) override;
-
-    void OnKeyDown(Context& context, unsigned int key);
-    void OnKeyUp(Context& context, unsigned int key);
-    void OnMouseDown(Context& context, unsigned int key);
-    void OnMouseUp(Context& context, unsigned int key);
-    void OnMouseMove(Context& context, int x, int y);
-
-    void RenderGeometry(Context& context) override;
-    void RenderFrame(Context& context) override;
-
-private:
-    std::unique_ptr<Camera> m_Camera;
-
-    std::vector<std::unique_ptr<Mesh>> m_Meshes;
-    std::unique_ptr<Mesh> m_Frame;
-
-    bool m_IsLeftMouseButtonPressed{ false };
-    int m_MouseX{ 0 };
-    int m_MouseY{ 0 };
+    float4x4 wvp; // World - View - Projection
 };
+
+struct VertexInput
+{
+    float3 position : POSITION;
+    float2 texcoord : TEXCOORD;
+};
+
+struct VertexOutput
+{
+    float4 position : SV_POSITION; // System Value
+    float2 texcoord : TEXCOORD;
+};
+
+VertexOutput Main(VertexInput input)
+{
+    VertexOutput output;
+
+    float4 position = float4(input.position, 1.0f);
+    output.position = mul(position, wvp);
+    output.texcoord = input.texcoord;
+
+    return output;
+}
+
+#endif // VERTEX_SHADER
+
+#ifdef PIXEL_SHADER
+
+struct PixelInput
+{
+    float4 position : SV_POSITION; // System Value
+    float2 texcoord : TEXCOORD;
+};
+
+struct PixelOutput
+{
+    float4 color : SV_Target0; // System Value
+};
+
+PixelOutput Main(PixelInput input)
+{
+    PixelOutput output;
+
+    output.color = float4(1.0f, 0.0f, 0.0f, 1.0f);
+
+    return output;
+}
+
+#endif // PIXEL_SHADER

@@ -31,7 +31,29 @@ class Buffer
 {
 public:
     virtual ~Buffer() = default;
-    virtual void Enable(DX11Device& device) = 0;
+    virtual void Enable(DX11Device& device);
+    virtual void Disable(DX11Device& device);
+};
+
+class GeometryBuffer final : public Buffer
+{
+public:
+    GeometryBuffer(DX11Device& device);
+    void Enable(DX11Device& device) override;
+
+    void EnableGeometry(DX11Device& device) const;
+    void DisableGeometry(DX11Device& device) const;
+
+private:
+    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
+
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_GeometryTexture;
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_GeometrySampler;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_GeometryRenderView;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_GeometryShaderView;
+
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilTexture;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
 };
 
 class FrameBuffer final : public Buffer
@@ -42,7 +64,7 @@ public:
 
 private:
     Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilTexture;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
+
+    // Frame texture is a part of swap chain output buffer
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_FrameRenderView;
 };

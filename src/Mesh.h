@@ -31,13 +31,59 @@ class DX11Device;
 struct Vertex final
 {
     DirectX::XMFLOAT3 Position;
-    DirectX::XMFLOAT4 Color;
+    DirectX::XMFLOAT2 TexCoord;
+};
+
+struct StaticData final
+{
+    static constexpr Vertex s_QuadVertices[] =
+    {
+        { { -1.0f,  1.0f,  0.0f }, { 0.0f, 0.0f } }, // 0
+        { {  1.0f,  1.0f,  0.0f }, { 1.0f, 0.0f } }, // 1
+        { {  1.0f, -1.0f,  0.0f }, { 1.0f, 1.0f } }, // 2
+        { { -1.0f, -1.0f,  0.0f }, { 0.0f, 1.0f } }  // 3
+    };
+
+    static constexpr UINT s_QuadIndices[] =
+    {
+        0, 1, 2, 0, 2, 3  // Front
+    };
+
+    static constexpr Vertex s_CubeVertices[] =
+    {
+        { { -1.0f,  1.0f, -1.0f }, { 0.0f, 0.0f } }, // 0
+        { {  1.0f,  1.0f, -1.0f }, { 0.0f, 0.0f } }, // 1
+        { {  1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f } }, // 2
+        { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f } }, // 3
+        { {  1.0f,  1.0f,  1.0f }, { 0.0f, 0.0f } }, // 4
+        { { -1.0f,  1.0f,  1.0f }, { 0.0f, 0.0f } }, // 5
+        { { -1.0f, -1.0f,  1.0f }, { 0.0f, 0.0f } }, // 6
+        { {  1.0f, -1.0f,  1.0f }, { 0.0f, 0.0f } }  // 7
+    };
+
+    static constexpr UINT s_CubeIndices[] =
+    {
+        0, 1, 2, 0, 2, 3, // Front
+        4, 5, 6, 4, 6, 7, // Back
+        1, 4, 7, 1, 7, 2, // Right
+        5, 0, 3, 5, 3, 6, // Left
+        0, 5, 4, 0, 4, 1, // Top
+        6, 3, 2, 6, 2, 7  // Bottom
+    };
+};
+
+struct MeshData final
+{
+    const Vertex* m_VertexData{ nullptr };
+    const UINT* m_IndexData{ nullptr };
+    UINT m_VertexSize{ 0 };
+    UINT m_IndexSize{ 0 };
 };
 
 class Mesh final
 {
 public:
-    Mesh(DX11Device& device);
+    Mesh(DX11Device& device, const MeshData& data);
 
     const DirectX::XMMATRIX& GetRotation() const;
     void Rotate(const DirectX::XMVECTOR& axis, float angle);
@@ -63,4 +109,6 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_VertexBuffer;
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_IndexBuffer;
+
+    UINT m_Indices{ 0 };
 };

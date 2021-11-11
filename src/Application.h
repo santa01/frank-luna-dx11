@@ -33,5 +33,6 @@ public:
     virtual void Shutdown(Context& context);
     virtual void Update(Context& context);
 
+    virtual void RenderGeometry(Context& context) = 0;
     virtual void RenderFrame(Context& context) = 0;
 };

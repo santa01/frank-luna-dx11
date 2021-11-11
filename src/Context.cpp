@@ -63,6 +63,10 @@ void Context::Run()
         m_Window->Update(*this);
         m_Application->Update(*this);
 
+        m_Device->GeometryBegin(*this);
+        m_Application->RenderGeometry(*this);
+        m_Device->GeometryEnd(*this);
+
         m_Device->FrameBegin(*this);
         m_Application->RenderFrame(*this);
         m_Device->FrameEnd(*this);

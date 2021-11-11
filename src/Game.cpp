@@ -35,19 +35,35 @@ void Game::Start(Context& context)
     m_Camera->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), -30.0f);
     m_Camera->Rotate(m_Camera->GetRight(), 30.0f);
 
-    m_FrameShader.reset(new Shader(device, "Frame.fx"));
+    MeshData cube
+    {
+        StaticData::s_CubeVertices,
+        StaticData::s_CubeIndices,
+        sizeof(StaticData::s_CubeVertices),
+        sizeof(StaticData::s_CubeIndices)
+    };
 
-    auto& mesh1 = m_Meshes.emplace_back(new Mesh(device));
+    auto& mesh1 = m_Meshes.emplace_back(new Mesh(device, cube));
     mesh1->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), 35.0f);
 
-    auto& mesh2 = m_Meshes.emplace_back(new Mesh(device));
+    auto& mesh2 = m_Meshes.emplace_back(new Mesh(device, cube));
     mesh2->Scale(DirectX::XMVectorSet(0.75f, 0.75f, 0.75f, 1.0f));
     mesh2->Move(DirectX::XMVectorSet(0.0f, 0.0f, 5.0f, 0.0f));
 
-    auto& mesh3 = m_Meshes.emplace_back(new Mesh(device));
+    auto& mesh3 = m_Meshes.emplace_back(new Mesh(device, cube));
     mesh3->Rotate(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), 45.0f);
     mesh3->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 15.0f);
     mesh3->Move(DirectX::XMVectorSet(3.0f, 0.0f, 3.0f, 0.0f));
+
+    MeshData quad
+    {
+        StaticData::s_QuadVertices,
+        StaticData::s_QuadIndices,
+        sizeof(StaticData::s_QuadVertices),
+        sizeof(StaticData::s_QuadIndices)
+    };
+
+    m_Frame.reset(new Mesh(device, quad));
 
     context.OnKeyDown.Connect(std::bind(&Game::OnKeyDown, this, std::placeholders::_1, std::placeholders::_2));
     context.OnKeyUp.Connect(std::bind(&Game::OnKeyUp, this, std::placeholders::_1, std::placeholders::_2));
@@ -144,19 +160,24 @@ void Game::OnMouseMove(Context& context, int x, int y)
     }
 }
 
-void Game::RenderFrame(Context& context)
+void Game::RenderGeometry(Context& context)
 {
     DX11Device& device = context.GetDevice();
+    Shader& geometryShader = device.GetGeometryShader();
 
     DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection());
-    m_FrameShader->Enable(device);
-
     for (auto& mesh : m_Meshes)
     {
         DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(mesh->GetWorld(), vp);
-        m_FrameShader->SetWVP(wvp);
-        m_FrameShader->Update(device);
+        geometryShader.SetWVP(wvp);
+        geometryShader.Update(device);
 
         mesh->Draw(device);
     }
+}
+
+void Game::RenderFrame(Context& context)
+{
+    DX11Device& device = context.GetDevice();
+    m_Frame->Draw(device);
 }

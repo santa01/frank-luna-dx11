@@ -20,36 +20,28 @@
  * SOFTWARE.
  */
 
-// https://docs.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-getting-started?redirectedfrom=MSDN#matrix-convention
 #pragma pack_matrix(row_major) // DirectXMath uses row-major matrices
 
-struct VertexOutput
-{
-    // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics
-    float4 position : SV_POSITION; // System Value
-    float4 color : COLOR;
-};
-
 #ifdef VERTEX_SHADER
-
-cbuffer VertexTransform
-{
-    float4x4 wvp; // World - View - Projection
-};
 
 struct VertexInput
 {
     float3 position : POSITION;
-    float4 color : COLOR;
+    float2 texcoord : TEXCOORD;
 };
 
-VertexOutput Main(VertexInput vertex)
+struct VertexOutput
+{
+    float4 position : SV_POSITION; // System Value
+    float2 texcoord : TEXCOORD;
+};
+
+VertexOutput Main(VertexInput input)
 {
     VertexOutput output;
 
-    float4 position = float4(vertex.position, 1.0f);
-    output.position = mul(position, wvp);
-    output.color = vertex.color;
+    output.position = float4(input.position, 1.0f);
+    output.texcoord = input.texcoord;
 
     return output;
 }
@@ -58,18 +50,25 @@ VertexOutput Main(VertexInput vertex)
 
 #ifdef PIXEL_SHADER
 
+Texture2D geometryTexture;
+SamplerState geometrySampler;
+
+struct PixelInput
+{
+    float4 position : SV_POSITION; // System Value
+    float2 texcoord : TEXCOORD;
+};
+
 struct PixelOutput
 {
-    // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics
     float4 color : SV_Target0; // System Value
 };
 
-// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics
-PixelOutput Main(VertexOutput vertex)
+PixelOutput Main(PixelInput input)
 {
     PixelOutput output;
 
-    output.color = vertex.color;
+    output.color = geometryTexture.Sample(geometrySampler, input.texcoord);
 
     return output;
 }
