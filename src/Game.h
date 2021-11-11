@@ -53,6 +53,4 @@ private:
     std::unique_ptr<Mesh> m_Frame;
 
     bool m_IsLeftMouseButtonPressed{ false };
-    int m_MouseX{ 0 };
-    int m_MouseY{ 0 };
 };

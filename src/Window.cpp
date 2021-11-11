@@ -109,9 +109,21 @@ const BYTE* Window::GetKeyboardState() const
     return m_KeyboardState;
 }
 
-void Window::DrawCursor(BOOL draw) const
+void Window::DrawCursor(bool draw)
 {
     ShowCursor(draw);
+}
+
+void Window::LockCursor(bool lock)
+{
+    if (lock && lock != m_IsCursorLocked)
+    {
+        POINT windowCenter = { m_Width / 2, m_Height / 2 };
+        ClientToScreen(m_Handle, &windowCenter);
+        SetCursorPos(windowCenter.x, windowCenter.y);
+    }
+
+    m_IsCursorLocked = lock;
 }
 
 void Window::Update(Context& context)
@@ -168,7 +180,28 @@ LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 
     case WM_MOUSEMOVE:
     {
-        context.OnMouseMove(context, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        int xPosition = GET_X_LPARAM(lParam);
+        int yPosition = GET_Y_LPARAM(lParam);
+
+        if (window.m_IsCursorLocked)
+        {
+            POINT windowCenter = { window.m_Width / 2, window.m_Height / 2 };
+            xPosition -= windowCenter.x;
+            yPosition -= windowCenter.y;
+
+            if (xPosition != 0 || yPosition != 0)
+            {
+                ClientToScreen(window.m_Handle, &windowCenter);
+                SetCursorPos(windowCenter.x, windowCenter.y);
+
+                context.OnMouseMove(context, xPosition, yPosition);
+            }
+        }
+        else
+        {
+            context.OnMouseMove(context, xPosition, yPosition);
+        }
+
         return 0;
     }
 

@@ -40,7 +40,9 @@ public:
     POINT GetCursorPosition() const;
     const BYTE* GetKeyboardState() const;
 
-    void DrawCursor(BOOL draw) const;
+    void DrawCursor(bool draw);
+    void LockCursor(bool lock);
+
     void Update(Context& context);
 
 private:
@@ -57,4 +59,5 @@ private:
     HINSTANCE m_Instance{ nullptr };
 
     BYTE m_KeyboardState[256] = { };
+    bool m_IsCursorLocked{ false };
 };
