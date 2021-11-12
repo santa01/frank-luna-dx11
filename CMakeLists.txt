@@ -27,18 +27,18 @@ set_directory_properties(PROPERTIES VS_STARTUP_PROJECT DX11)
 
 set(SOURCE_ROOT ${CMAKE_SOURCE_DIR}/src)
 
-file(GLOB SourceFiles ${SOURCE_ROOT}/*.cpp)
-file(GLOB HeaderFiles ${SOURCE_ROOT}/*.h)
-file(GLOB ShaderFiles ${SOURCE_ROOT}/*.fx)
+file(GLOB SourceFiles   ${SOURCE_ROOT}/*.cpp)
+file(GLOB HeaderFiles   ${SOURCE_ROOT}/*.h)
+file(GLOB ResourceFiles ${SOURCE_ROOT}/*.fx ${SOURCE_ROOT}/*.dds)
 
-source_group(TREE ${SOURCE_ROOT} PREFIX "Source Files" FILES ${SourceFiles})
-source_group(TREE ${SOURCE_ROOT} PREFIX "Header Files" FILES ${HeaderFiles})
-source_group(TREE ${SOURCE_ROOT} PREFIX "Shader Files" FILES ${ShaderFiles})
+source_group(TREE ${SOURCE_ROOT} PREFIX "Source Files"   FILES ${SourceFiles})
+source_group(TREE ${SOURCE_ROOT} PREFIX "Header Files"   FILES ${HeaderFiles})
+source_group(TREE ${SOURCE_ROOT} PREFIX "Resource Files" FILES ${ResourceFiles})
 
-add_executable(DX11 WIN32 ${SourceFiles} ${HeaderFiles} ${ShaderFiles})
+add_executable(DX11 WIN32 ${SourceFiles} ${HeaderFiles} ${ResourceFiles})
 
 target_compile_options(DX11 PRIVATE /W4 /WX /wd4100)
 target_compile_features(DX11 PRIVATE cxx_std_17)
 target_link_libraries(DX11 PRIVATE d3d11 d3dcompiler)
 
-add_custom_command(TARGET DX11 POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ShaderFiles} $<TARGET_FILE_DIR:DX11>)
+add_custom_command(TARGET DX11 POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ResourceFiles} $<TARGET_FILE_DIR:DX11>)

@@ -22,53 +22,45 @@
 
 #pragma once
 
-#include "Texture.h"
 #include <d3d11.h>
 #include <wrl/client.h>
-#include <memory>
+#include <string>
 
 class DX11Device;
 
-class Buffer
+class Texture
 {
 public:
-    virtual ~Buffer() = default;
+    virtual ~Texture() = default;
     virtual void Enable(DX11Device& device) = 0;
     virtual void Disable(DX11Device& device) = 0;
 };
 
-class GeometryBuffer final : public Buffer
+class GeometryTexture final : public Texture
 {
 public:
-    GeometryBuffer(DX11Device& device);
+    GeometryTexture(DX11Device& device, UINT slot, UINT width, UINT height);
     void Enable(DX11Device& device) override;
     void Disable(DX11Device& device) override;
 
-    void EnableGeometry(DX11Device& device) const;
-    void DisableGeometry(DX11Device& device) const;
+    ID3D11RenderTargetView* GetRenderView() const;
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_Texture;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_ShaderView;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderView;
 
-    std::unique_ptr<GeometryTexture> m_ColorTexture;
-    std::unique_ptr<GeometryTexture> m_PositionTexture;
-
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilTexture;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
-
-    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_GeometrySampler;
+    UINT m_Slot{ 0 };
 };
 
-class FrameBuffer final : public Buffer
+class ImageTexture final : public Texture
 {
 public:
-    FrameBuffer(DX11Device& device);
+    ImageTexture(DX11Device& device, UINT anisotropy, const std::wstring& source);
     void Enable(DX11Device& device) override;
     void Disable(DX11Device& device) override;
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
-
-    // Frame texture is a part of swap chain output buffer
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_FrameRenderView;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_ShaderView;
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_Sampler;
 };

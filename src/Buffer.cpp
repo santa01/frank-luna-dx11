@@ -48,60 +48,8 @@ GeometryBuffer::GeometryBuffer(DX11Device& device)
     D3D11_TEXTURE2D_DESC outputDesc{ };
     pFrameTexture->GetDesc(&outputDesc);
 
-    {
-        D3D11_SAMPLER_DESC samplerDesc{ };
-        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.BorderColor[1] = 1.0f; // Green
-        samplerDesc.BorderColor[3] = 1.0f; // Alpha
-
-        hr = deviceHandle.CreateSamplerState(&samplerDesc, &m_GeometrySampler);
-        assert(SUCCEEDED(hr));
-    }
-
-    {
-        D3D11_TEXTURE2D_DESC colorDesc{ };
-        colorDesc.Width = outputDesc.Width;
-        colorDesc.Height = outputDesc.Height;
-        colorDesc.MipLevels = 1;
-        colorDesc.ArraySize = 1;
-        colorDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        colorDesc.Usage = D3D11_USAGE_DEFAULT;
-        colorDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-        colorDesc.SampleDesc.Count = 1;
-        colorDesc.SampleDesc.Quality = 0;
-
-        hr = deviceHandle.CreateTexture2D(&colorDesc, 0, &m_ColorTexture);
-        assert(SUCCEEDED(hr));
-
-        hr = deviceHandle.CreateRenderTargetView(m_ColorTexture.Get(), nullptr, &m_ColorRenderView);
-        assert(SUCCEEDED(hr));
-
-        hr = deviceHandle.CreateShaderResourceView(m_ColorTexture.Get(), nullptr, &m_ColorShaderView);
-        assert(SUCCEEDED(hr));
-
-        D3D11_TEXTURE2D_DESC positionDesc{ };
-        positionDesc.Width = outputDesc.Width;
-        positionDesc.Height = outputDesc.Height;
-        positionDesc.MipLevels = 1;
-        positionDesc.ArraySize = 1;
-        positionDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-        positionDesc.Usage = D3D11_USAGE_DEFAULT;
-        positionDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-        positionDesc.SampleDesc.Count = 1;
-        positionDesc.SampleDesc.Quality = 0;
-
-        hr = deviceHandle.CreateTexture2D(&positionDesc, 0, &m_PositionTexture);
-        assert(SUCCEEDED(hr));
-
-        hr = deviceHandle.CreateRenderTargetView(m_PositionTexture.Get(), nullptr, &m_PositionRenderView);
-        assert(SUCCEEDED(hr));
-
-        hr = deviceHandle.CreateShaderResourceView(m_PositionTexture.Get(), nullptr, &m_PositionShaderView);
-        assert(SUCCEEDED(hr));
-    }
+    m_ColorTexture.reset(new GeometryTexture(device, 0, outputDesc.Width, outputDesc.Height));
+    m_PositionTexture.reset(new GeometryTexture(device, 1, outputDesc.Width, outputDesc.Height));
 
     {
         D3D11_TEXTURE2D_DESC depthStencilDesc{ };
@@ -121,6 +69,19 @@ GeometryBuffer::GeometryBuffer(DX11Device& device)
         hr = deviceHandle.CreateDepthStencilView(m_DepthStencilTexture.Get(), nullptr, &m_DepthStencilView);
         assert(SUCCEEDED(hr));
     }
+
+    {
+        D3D11_SAMPLER_DESC samplerDesc{ };
+        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+        samplerDesc.BorderColor[1] = 1.0f; // Green
+        samplerDesc.BorderColor[3] = 1.0f; // Alpha
+
+        hr = deviceHandle.CreateSamplerState(&samplerDesc, &m_GeometrySampler);
+        assert(SUCCEEDED(hr));
+    }
 }
 
 void GeometryBuffer::Enable(DX11Device& device)
@@ -128,13 +89,13 @@ void GeometryBuffer::Enable(DX11Device& device)
     ID3D11DeviceContext& deviceContext = device.GetContext();
 
     {
-        ID3D11RenderTargetView* renderViews[] = { m_ColorRenderView.Get(), m_PositionRenderView.Get() };
+        ID3D11RenderTargetView* renderViews[] = { m_ColorTexture->GetRenderView(), m_PositionTexture->GetRenderView() };
         deviceContext.OMSetRenderTargets(2, renderViews, m_DepthStencilView.Get()); // Output Merger
         deviceContext.RSSetState(m_RasterizerState.Get()); // Rasterizer State
 
         FLOAT zero[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        deviceContext.ClearRenderTargetView(m_ColorRenderView.Get(), zero);
-        deviceContext.ClearRenderTargetView(m_PositionRenderView.Get(), zero);
+        deviceContext.ClearRenderTargetView(m_ColorTexture->GetRenderView(), zero);
+        deviceContext.ClearRenderTargetView(m_PositionTexture->GetRenderView(), zero);
 
         deviceContext.ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     }
@@ -158,22 +119,21 @@ void GeometryBuffer::EnableGeometry(DX11Device& device) const
 {
     ID3D11DeviceContext& deviceContext = device.GetContext();
 
-    {
-        ID3D11ShaderResourceView* resourceViews[] = { m_ColorShaderView.Get(), m_PositionShaderView.Get() };
-        deviceContext.PSSetShaderResources(0, 2, resourceViews);
-        deviceContext.PSSetSamplers(0, 1, m_GeometrySampler.GetAddressOf());
-    }
+    m_ColorTexture->Enable(device);
+    m_PositionTexture->Enable(device);
+
+    deviceContext.PSSetSamplers(0, 1, m_GeometrySampler.GetAddressOf());
 }
 
 void GeometryBuffer::DisableGeometry(DX11Device& device) const
 {
     ID3D11DeviceContext& deviceContext = device.GetContext();
 
-    {
-        // Unbound shader resources in case they are used as render targets later
-        ID3D11ShaderResourceView* resourceViews[] = { nullptr, nullptr };
-        deviceContext.PSSetShaderResources(0, 2, resourceViews);
+    // Unbound shader resources in case they are used as render targets later
+    m_ColorTexture->Disable(device);
+    m_PositionTexture->Disable(device);
 
+    {
         // Unbound sampler states just in case
         ID3D11SamplerState* samplerStates[] = { nullptr };
         deviceContext.PSSetSamplers(0, 1, samplerStates);

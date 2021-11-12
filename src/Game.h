@@ -25,6 +25,7 @@
 #include "Application.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "Texture.h"
 #include <memory>
 #include <vector>
 
@@ -49,6 +50,7 @@ public:
 private:
     std::unique_ptr<Camera> m_Camera;
 
+    std::unique_ptr<Texture> m_Texture;
     std::vector<std::unique_ptr<Mesh>> m_Meshes;
     std::unique_ptr<Mesh> m_Frame;
 

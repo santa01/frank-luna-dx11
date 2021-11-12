@@ -96,7 +96,7 @@ Shader::Shader(DX11Device& device, const std::string& source)
 
     {
         D3D11_BUFFER_DESC desc{ };
-        desc.ByteWidth = sizeof(VertexTransform);
+        desc.ByteWidth = sizeof(m_VertexTransformData);
         desc.Usage = D3D11_USAGE_DYNAMIC;
         desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -108,22 +108,22 @@ Shader::Shader(DX11Device& device, const std::string& source)
 
 const DirectX::XMMATRIX& Shader::GetWorld() const
 {
-    return m_VertexTransform.m_World;
+    return m_VertexTransformData.m_World;
 }
 
 void Shader::SetWorld(const DirectX::XMMATRIX& world)
 {
-    m_VertexTransform.m_World = world;
+    m_VertexTransformData.m_World = world;
 }
 
 const DirectX::XMMATRIX& Shader::GetViewProjection() const
 {
-    return m_VertexTransform.m_ViewProjection;
+    return m_VertexTransformData.m_ViewProjection;
 }
 
 void Shader::SetViewProjection(const DirectX::XMMATRIX& viewProjection)
 {
-    m_VertexTransform.m_ViewProjection = viewProjection;
+    m_VertexTransformData.m_ViewProjection = viewProjection;
 }
 
 void Shader::Enable(DX11Device& device)
@@ -150,7 +150,7 @@ void Shader::UpdateVertexTransform(DX11Device& device)
         D3D11_MAPPED_SUBRESOURCE mappedSubresource{ };
 
         deviceContext.Map(m_TransformBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
-        std::memcpy(mappedSubresource.pData, &m_VertexTransform, sizeof(m_VertexTransform));
+        std::memcpy(mappedSubresource.pData, &m_VertexTransformData, sizeof(m_VertexTransformData));
         deviceContext.Unmap(m_TransformBuffer.Get(), 0);
     }
 }

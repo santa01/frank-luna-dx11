@@ -59,6 +59,9 @@ VertexOutput Main(VertexInput input)
 
 #ifdef PIXEL_SHADER
 
+Texture2D diffuseTexture : register(t0);
+SamplerState diffuseSampler : register(s0);
+
 struct PixelInput
 {
     float4 projectionPosition : SV_POSITION; // System Value
@@ -76,7 +79,7 @@ PixelOutput Main(PixelInput input)
 {
     PixelOutput output;
 
-    output.color = float4(1.0f, 0.0f, 0.0f, 1.0f);
+    output.color = diffuseTexture.Sample(diffuseSampler, input.texcoord);
     output.position = input.worldPosition;
 
     return output;

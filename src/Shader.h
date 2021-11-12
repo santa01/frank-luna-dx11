@@ -48,14 +48,14 @@ private:
 
     // If the bind flag is D3D11_BIND_CONSTANT_BUFFER, you must set the ByteWidth value in multiples of 16
     // https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_buffer_desc
-    struct VertexTransform
+    struct VertexTransformData
     {
         // Describes a 4*4 matrix aligned on a 16-byte boundary that maps to four hardware vector registers.
         // https://docs.microsoft.com/en-us/windows/win32/api/directxmath/ns-directxmath-xmmatrix
         DirectX::XMMATRIX m_World{ DirectX::XMMatrixIdentity() };
         DirectX::XMMATRIX m_ViewProjection{ DirectX::XMMatrixIdentity() };
     }
-    m_VertexTransform;
+    m_VertexTransformData;
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VertexShader;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PixelShader;
