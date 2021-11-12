@@ -159,11 +159,10 @@ void Game::RenderGeometry(Context& context)
     DX11Device& device = context.GetDevice();
     Shader& geometryShader = device.GetGeometryShader();
 
-    DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection());
+    geometryShader.SetViewProjection(DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection()));
     for (auto& mesh : m_Meshes)
     {
-        DirectX::XMMATRIX wvp = DirectX::XMMatrixMultiply(mesh->GetWorld(), vp);
-        geometryShader.SetWVP(wvp);
+        geometryShader.SetWorld(mesh->GetWorld());
         geometryShader.Update(device);
 
         mesh->Draw(device);

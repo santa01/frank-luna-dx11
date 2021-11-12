@@ -25,23 +25,6 @@
 #include <windows.h>
 #include <cassert>
 
-void Buffer::Enable(DX11Device& device)
-{ }
-
-void Buffer::Disable(DX11Device& device)
-{
-    ID3D11DeviceContext& deviceContext = device.GetContext();
-
-    {
-        // Unbound render targets in case target textures to be used in shaders later
-        ID3D11RenderTargetView* renderViews[] = { nullptr };
-        deviceContext.OMSetRenderTargets(1, renderViews, nullptr); // Output Merger
-
-        // Reset rasterizer state to default just in case
-        deviceContext.RSSetState(nullptr); // Rasterizer State
-    }
-}
-
 GeometryBuffer::GeometryBuffer(DX11Device& device)
 {
     ID3D11Device& deviceHandle = device.GetHandle();
@@ -66,20 +49,6 @@ GeometryBuffer::GeometryBuffer(DX11Device& device)
     pFrameTexture->GetDesc(&outputDesc);
 
     {
-        D3D11_TEXTURE2D_DESC geometryDesc{ };
-        geometryDesc.Width = outputDesc.Width;
-        geometryDesc.Height = outputDesc.Height;
-        geometryDesc.MipLevels = 1;
-        geometryDesc.ArraySize = 1;
-        geometryDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        geometryDesc.Usage = D3D11_USAGE_DEFAULT;
-        geometryDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-        geometryDesc.SampleDesc.Count = 1;
-        geometryDesc.SampleDesc.Quality = 0;
-
-        hr = deviceHandle.CreateTexture2D(&geometryDesc, 0, &m_GeometryTexture);
-        assert(SUCCEEDED(hr));
-
         D3D11_SAMPLER_DESC samplerDesc{ };
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
         samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -90,11 +59,47 @@ GeometryBuffer::GeometryBuffer(DX11Device& device)
 
         hr = deviceHandle.CreateSamplerState(&samplerDesc, &m_GeometrySampler);
         assert(SUCCEEDED(hr));
+    }
 
-        hr = deviceHandle.CreateRenderTargetView(m_GeometryTexture.Get(), nullptr, &m_GeometryRenderView);
+    {
+        D3D11_TEXTURE2D_DESC colorDesc{ };
+        colorDesc.Width = outputDesc.Width;
+        colorDesc.Height = outputDesc.Height;
+        colorDesc.MipLevels = 1;
+        colorDesc.ArraySize = 1;
+        colorDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        colorDesc.Usage = D3D11_USAGE_DEFAULT;
+        colorDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+        colorDesc.SampleDesc.Count = 1;
+        colorDesc.SampleDesc.Quality = 0;
+
+        hr = deviceHandle.CreateTexture2D(&colorDesc, 0, &m_ColorTexture);
         assert(SUCCEEDED(hr));
 
-        hr = deviceHandle.CreateShaderResourceView(m_GeometryTexture.Get(), nullptr, &m_GeometryShaderView);
+        hr = deviceHandle.CreateRenderTargetView(m_ColorTexture.Get(), nullptr, &m_ColorRenderView);
+        assert(SUCCEEDED(hr));
+
+        hr = deviceHandle.CreateShaderResourceView(m_ColorTexture.Get(), nullptr, &m_ColorShaderView);
+        assert(SUCCEEDED(hr));
+
+        D3D11_TEXTURE2D_DESC positionDesc{ };
+        positionDesc.Width = outputDesc.Width;
+        positionDesc.Height = outputDesc.Height;
+        positionDesc.MipLevels = 1;
+        positionDesc.ArraySize = 1;
+        positionDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        positionDesc.Usage = D3D11_USAGE_DEFAULT;
+        positionDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+        positionDesc.SampleDesc.Count = 1;
+        positionDesc.SampleDesc.Quality = 0;
+
+        hr = deviceHandle.CreateTexture2D(&positionDesc, 0, &m_PositionTexture);
+        assert(SUCCEEDED(hr));
+
+        hr = deviceHandle.CreateRenderTargetView(m_PositionTexture.Get(), nullptr, &m_PositionRenderView);
+        assert(SUCCEEDED(hr));
+
+        hr = deviceHandle.CreateShaderResourceView(m_PositionTexture.Get(), nullptr, &m_PositionShaderView);
         assert(SUCCEEDED(hr));
     }
 
@@ -123,12 +128,29 @@ void GeometryBuffer::Enable(DX11Device& device)
     ID3D11DeviceContext& deviceContext = device.GetContext();
 
     {
-        deviceContext.OMSetRenderTargets(1, m_GeometryRenderView.GetAddressOf(), m_DepthStencilView.Get()); // Output Merger
+        ID3D11RenderTargetView* renderViews[] = { m_ColorRenderView.Get(), m_PositionRenderView.Get() };
+        deviceContext.OMSetRenderTargets(2, renderViews, m_DepthStencilView.Get()); // Output Merger
         deviceContext.RSSetState(m_RasterizerState.Get()); // Rasterizer State
 
-        FLOAT black[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        deviceContext.ClearRenderTargetView(m_GeometryRenderView.Get(), black);
+        FLOAT zero[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        deviceContext.ClearRenderTargetView(m_ColorRenderView.Get(), zero);
+        deviceContext.ClearRenderTargetView(m_PositionRenderView.Get(), zero);
+
         deviceContext.ClearDepthStencilView(m_DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    }
+}
+
+void GeometryBuffer::Disable(DX11Device& device)
+{
+    ID3D11DeviceContext& deviceContext = device.GetContext();
+
+    {
+        // Unbound render targets in case target textures to be used in shaders later
+        ID3D11RenderTargetView* renderViews[] = { nullptr, nullptr };
+        deviceContext.OMSetRenderTargets(2, renderViews, nullptr); // Output Merger
+
+        // Reset rasterizer state to default just in case
+        deviceContext.RSSetState(nullptr); // Rasterizer State
     }
 }
 
@@ -137,7 +159,8 @@ void GeometryBuffer::EnableGeometry(DX11Device& device) const
     ID3D11DeviceContext& deviceContext = device.GetContext();
 
     {
-        deviceContext.PSSetShaderResources(0, 1, m_GeometryShaderView.GetAddressOf());
+        ID3D11ShaderResourceView* resourceViews[] = { m_ColorShaderView.Get(), m_PositionShaderView.Get() };
+        deviceContext.PSSetShaderResources(0, 2, resourceViews);
         deviceContext.PSSetSamplers(0, 1, m_GeometrySampler.GetAddressOf());
     }
 }
@@ -148,8 +171,8 @@ void GeometryBuffer::DisableGeometry(DX11Device& device) const
 
     {
         // Unbound shader resources in case they are used as render targets later
-        ID3D11ShaderResourceView* resourceViews[] = { nullptr };
-        deviceContext.PSSetShaderResources(0, 1, resourceViews);
+        ID3D11ShaderResourceView* resourceViews[] = { nullptr, nullptr };
+        deviceContext.PSSetShaderResources(0, 2, resourceViews);
 
         // Unbound sampler states just in case
         ID3D11SamplerState* samplerStates[] = { nullptr };
@@ -193,5 +216,19 @@ void FrameBuffer::Enable(DX11Device& device)
 
         FLOAT black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
         deviceContext.ClearRenderTargetView(m_FrameRenderView.Get(), black);
+    }
+}
+
+void FrameBuffer::Disable(DX11Device& device)
+{
+    ID3D11DeviceContext& deviceContext = device.GetContext();
+
+    {
+        // Unbound render targets in case target textures to be used in shaders later
+        ID3D11RenderTargetView* renderViews[] = { nullptr };
+        deviceContext.OMSetRenderTargets(1, renderViews, nullptr); // Output Merger
+
+        // Reset rasterizer state to default just in case
+        deviceContext.RSSetState(nullptr); // Rasterizer State
     }
 }

@@ -34,8 +34,11 @@ class Shader final
 public:
     Shader(DX11Device& device, const std::string& source);
 
-    const DirectX::XMMATRIX& GetWVP() const;
-    void SetWVP(const DirectX::XMMATRIX& wvp);
+    const DirectX::XMMATRIX& GetWorld() const;
+    void SetWorld(const DirectX::XMMATRIX& world);
+
+    const DirectX::XMMATRIX& GetViewProjection() const;
+    void SetViewProjection(const DirectX::XMMATRIX& viewProjection);
 
     void Enable(DX11Device& device);
     void Update(DX11Device& device);
@@ -49,7 +52,8 @@ private:
     {
         // Describes a 4*4 matrix aligned on a 16-byte boundary that maps to four hardware vector registers.
         // https://docs.microsoft.com/en-us/windows/win32/api/directxmath/ns-directxmath-xmmatrix
-        DirectX::XMMATRIX m_WVP{ DirectX::XMMatrixIdentity() };
+        DirectX::XMMATRIX m_World{ DirectX::XMMatrixIdentity() };
+        DirectX::XMMATRIX m_ViewProjection{ DirectX::XMMatrixIdentity() };
     }
     m_VertexTransform;
 

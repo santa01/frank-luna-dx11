@@ -31,8 +31,8 @@ class Buffer
 {
 public:
     virtual ~Buffer() = default;
-    virtual void Enable(DX11Device& device);
-    virtual void Disable(DX11Device& device);
+    virtual void Enable(DX11Device& device) = 0;
+    virtual void Disable(DX11Device& device) = 0;
 };
 
 class GeometryBuffer final : public Buffer
@@ -40,17 +40,22 @@ class GeometryBuffer final : public Buffer
 public:
     GeometryBuffer(DX11Device& device);
     void Enable(DX11Device& device) override;
+    void Disable(DX11Device& device) override;
 
     void EnableGeometry(DX11Device& device) const;
     void DisableGeometry(DX11Device& device) const;
 
 private:
     Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
-
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_GeometryTexture;
     Microsoft::WRL::ComPtr<ID3D11SamplerState> m_GeometrySampler;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_GeometryRenderView;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_GeometryShaderView;
+
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_ColorTexture;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_ColorRenderView;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_ColorShaderView;
+
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_PositionTexture;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_PositionRenderView;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_PositionShaderView;
 
     Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilTexture;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
@@ -61,6 +66,7 @@ class FrameBuffer final : public Buffer
 public:
     FrameBuffer(DX11Device& device);
     void Enable(DX11Device& device) override;
+    void Disable(DX11Device& device) override;
 
 private:
     Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;

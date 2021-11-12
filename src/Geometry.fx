@@ -26,7 +26,8 @@
 
 cbuffer VertexTransform : register(b0)
 {
-    float4x4 wvp; // World - View - Projection
+    float4x4 world;
+    float4x4 viewProjection;
 };
 
 struct VertexInput
@@ -37,7 +38,8 @@ struct VertexInput
 
 struct VertexOutput
 {
-    float4 position : SV_POSITION; // System Value
+    float4 projectionPosition : SV_POSITION; // System Value
+    float4 worldPosition : POSITION;
     float2 texcoord : TEXCOORD;
 };
 
@@ -45,8 +47,9 @@ VertexOutput Main(VertexInput input)
 {
     VertexOutput output;
 
-    float4 position = float4(input.position, 1.0f);
-    output.position = mul(position, wvp);
+    float4 vertexPosition = float4(input.position, 1.0f);
+    output.projectionPosition = mul(vertexPosition, mul(world, viewProjection));
+    output.worldPosition = mul(vertexPosition, world);
     output.texcoord = input.texcoord;
 
     return output;
@@ -58,13 +61,15 @@ VertexOutput Main(VertexInput input)
 
 struct PixelInput
 {
-    float4 position : SV_POSITION; // System Value
+    float4 projectionPosition : SV_POSITION; // System Value
+    float4 worldPosition : POSITION;
     float2 texcoord : TEXCOORD;
 };
 
 struct PixelOutput
 {
     float4 color : SV_Target0; // System Value
+    float4 position : SV_Target1; // System Value
 };
 
 PixelOutput Main(PixelInput input)
@@ -72,6 +77,7 @@ PixelOutput Main(PixelInput input)
     PixelOutput output;
 
     output.color = float4(1.0f, 0.0f, 0.0f, 1.0f);
+    output.position = input.worldPosition;
 
     return output;
 }

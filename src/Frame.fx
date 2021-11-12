@@ -50,8 +50,9 @@ VertexOutput Main(VertexInput input)
 
 #ifdef PIXEL_SHADER
 
-Texture2D geometryTexture;
-SamplerState geometrySampler;
+Texture2D colorTexture : register(t0);
+Texture2D positionTexture : register(t1);
+SamplerState geometrySampler : register(s0);
 
 struct PixelInput
 {
@@ -68,7 +69,7 @@ PixelOutput Main(PixelInput input)
 {
     PixelOutput output;
 
-    output.color = geometryTexture.Sample(geometrySampler, input.texcoord);
+    output.color = colorTexture.Sample(geometrySampler, input.texcoord);
 
     return output;
 }

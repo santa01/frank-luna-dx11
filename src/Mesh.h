@@ -30,8 +30,8 @@ class DX11Device;
 
 struct Vertex final
 {
-    DirectX::XMFLOAT3 Position;
-    DirectX::XMFLOAT2 TexCoord;
+    DirectX::XMFLOAT3 Position{ 0.0f, 0.0f, 0.0f };
+    DirectX::XMFLOAT2 TexCoord{ 0.0f, 0.0f };
 };
 
 struct StaticData final

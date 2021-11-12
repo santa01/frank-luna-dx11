@@ -106,14 +106,24 @@ Shader::Shader(DX11Device& device, const std::string& source)
     }
 }
 
-const DirectX::XMMATRIX& Shader::GetWVP() const
+const DirectX::XMMATRIX& Shader::GetWorld() const
 {
-    return m_VertexTransform.m_WVP;
+    return m_VertexTransform.m_World;
 }
 
-void Shader::SetWVP(const DirectX::XMMATRIX& wvp)
+void Shader::SetWorld(const DirectX::XMMATRIX& world)
 {
-    m_VertexTransform.m_WVP = wvp;
+    m_VertexTransform.m_World = world;
+}
+
+const DirectX::XMMATRIX& Shader::GetViewProjection() const
+{
+    return m_VertexTransform.m_ViewProjection;
+}
+
+void Shader::SetViewProjection(const DirectX::XMMATRIX& viewProjection)
+{
+    m_VertexTransform.m_ViewProjection = viewProjection;
 }
 
 void Shader::Enable(DX11Device& device)
