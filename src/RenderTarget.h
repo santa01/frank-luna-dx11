@@ -23,54 +23,56 @@
 #pragma once
 
 #include "Resource.h"
+#include "Texture.h"
 #include <d3d11.h>
 #include <wrl/client.h>
-#include <string>
+#include <memory>
 
 class DX11Device;
 
-class Texture : public DX11Resource
+class RenderTarget : public DX11Resource
 {
 public:
-    Texture(DX11Device& device, UINT slot);
-    virtual ~Texture() = default;
+    RenderTarget(DX11Device& device);
+    virtual ~RenderTarget() = default;
+
+protected:
+    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
+};
+
+class GeometryBuffer final : public RenderTarget
+{
+public:
+    GeometryBuffer(DX11Device& device);
 
     void Enable() override;
     void Disable() override;
 
-    ID3D11ShaderResourceView& GetShaderView() const;
+    GeometryTexture& GetDiffuseTexture() const;
+    GeometryTexture& GetSpecularTexture() const;
+    GeometryTexture& GetPositionTexture() const;
+    GeometryTexture& GetNormalTexture() const;
 
-protected:
-    UINT m_ResourceSlot{ 0 };
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_ShaderView;
-};
-
-class GeometryTexture final : public Texture
-{
-public:
-    GeometryTexture(DX11Device& device, UINT slot, UINT width, UINT height);
-
-    ID3D11RenderTargetView& GetRenderView() const;
+    DepthStencilTexture& GetDepthStencilTexture() const;
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_Texture;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderView;
+    std::unique_ptr<GeometryTexture> m_DiffuseTexture;
+    std::unique_ptr<GeometryTexture> m_SpecularTexture;
+    std::unique_ptr<GeometryTexture> m_PositionTexture;
+    std::unique_ptr<GeometryTexture> m_NormalTexture;
+
+    std::unique_ptr<DepthStencilTexture> m_DepthStencilTexture;
 };
 
-class DepthStencilTexture final : public Texture
+class FrameBuffer final : public RenderTarget
 {
 public:
-    DepthStencilTexture(DX11Device& device, UINT slot, UINT width, UINT height);
+    FrameBuffer(DX11Device& device);
 
-    ID3D11DepthStencilView& GetDepthStencilView() const;
+    void Enable() override;
+    void Disable() override;
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_Texture;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
-};
-
-class ImageTexture final : public Texture
-{
-public:
-    ImageTexture(DX11Device& device, UINT slot, const std::wstring& source);
+    // Frame texture is a part of swap chain output buffer
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_FrameRenderView;
 };

@@ -25,7 +25,7 @@
 #include <chrono>
 
 Context::Context(Application& application, const ContextParams& params)
-    : m_Application(&application)
+    : m_Application(application)
     , m_Params(params)
 {
     m_Window.reset(new Window(*this));
@@ -54,21 +54,21 @@ float Context::GetFrameTime() const
 
 void Context::Run()
 {
-    m_Application->Start(*this);
+    m_Application.Start(*this);
 
     while (!m_Terminate)
     {
         auto frameBegin = std::chrono::high_resolution_clock::now();
 
         m_Window->Update(*this);
-        m_Application->Update(*this);
+        m_Application.Update(*this);
 
         m_Device->GeometryBegin(*this);
-        m_Application->RenderGeometry(*this);
+        m_Application.RenderGeometry(*this);
         m_Device->GeometryEnd(*this);
 
         m_Device->FrameBegin(*this);
-        m_Application->RenderFrame(*this);
+        m_Application.RenderFrame(*this);
         m_Device->FrameEnd(*this);
 
         auto frameEnd = std::chrono::high_resolution_clock::now();
@@ -77,7 +77,7 @@ void Context::Run()
         m_FrameTime = frameDuration.count();
     }
 
-    m_Application->Shutdown(*this);
+    m_Application.Shutdown(*this);
 }
 
 void Context::Terminate()

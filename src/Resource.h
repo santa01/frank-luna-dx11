@@ -22,37 +22,17 @@
 
 #pragma once
 
-#include "Application.h"
-#include "Camera.h"
-#include "Mesh.h"
-#include "Texture.h"
-#include <memory>
-#include <vector>
+class DX11Device;
 
-class Context;
-
-class Game final : public Application
+class DX11Resource
 {
 public:
-    void Start(Context& context) override;
-    void Shutdown(Context& context) override;
-    void Update(Context& context) override;
+    DX11Resource(DX11Device& device);
+    virtual ~DX11Resource() = default;
 
-    void OnKeyDown(Context& context, unsigned int key);
-    void OnKeyUp(Context& context, unsigned int key);
-    void OnMouseDown(Context& context, unsigned int key);
-    void OnMouseUp(Context& context, unsigned int key);
-    void OnMouseMove(Context& context, int x, int y);
+    virtual void Enable() = 0;
+    virtual void Disable() = 0;
 
-    void RenderGeometry(Context& context) override;
-    void RenderFrame(Context& context) override;
-
-private:
-    std::unique_ptr<Camera> m_Camera;
-
-    std::unique_ptr<ImageTexture> m_Texture;
-    std::vector<std::unique_ptr<Mesh>> m_Meshes;
-    std::unique_ptr<Mesh> m_Frame;
-
-    bool m_IsLeftMouseButtonPressed{ false };
+protected:
+    DX11Device& m_Device;
 };

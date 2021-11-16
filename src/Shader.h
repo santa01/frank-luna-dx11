@@ -22,43 +22,45 @@
 
 #pragma once
 
+#include "Resource.h"
+#include "Buffer.h"
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <DirectXMath.h>
 #include <string>
+#include <map>
 
 class DX11Device;
 
-class Shader final
+class Shader final : public DX11Resource
 {
 public:
     Shader(DX11Device& device, const std::string& source);
 
-    const DirectX::XMMATRIX& GetWorld() const;
+    void SetSampler(UINT slot, D3D11_FILTER filter);
     void SetWorld(const DirectX::XMMATRIX& world);
-
-    const DirectX::XMMATRIX& GetViewProjection() const;
     void SetViewProjection(const DirectX::XMMATRIX& viewProjection);
 
-    void Enable(DX11Device& device);
-    void Update(DX11Device& device);
+    void Enable() override;
+    void Disable() override;
 
 private:
-    void UpdateVertexTransform(DX11Device& device);
-
     // If the bind flag is D3D11_BIND_CONSTANT_BUFFER, you must set the ByteWidth value in multiples of 16
     // https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_buffer_desc
-    struct VertexTransformData
+    struct TransformData
     {
         // Describes a 4*4 matrix aligned on a 16-byte boundary that maps to four hardware vector registers.
         // https://docs.microsoft.com/en-us/windows/win32/api/directxmath/ns-directxmath-xmmatrix
         DirectX::XMMATRIX m_World{ DirectX::XMMatrixIdentity() };
         DirectX::XMMATRIX m_ViewProjection{ DirectX::XMMatrixIdentity() };
-    }
-    m_VertexTransformData;
+    };
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VertexShader;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PixelShader;
     Microsoft::WRL::ComPtr<ID3D11InputLayout> m_InputLayout;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> m_TransformBuffer;
+
+    TransformData m_TransformData{ };
+    std::unique_ptr<ConstantBuffer<TransformData>> m_TransformBuffer;
+
+    std::map<UINT, Microsoft::WRL::ComPtr<ID3D11SamplerState>> m_TextureSamplers;
 };

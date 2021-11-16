@@ -85,7 +85,10 @@ DX11Device::DX11Device(Context& context)
     m_FrameBuffer.reset(new FrameBuffer(*this));
 
     m_GeometryShader.reset(new Shader(*this, "Geometry.fx"));
+    m_GeometryShader->SetSampler(0, D3D11_FILTER_MIN_MAG_MIP_POINT);
+
     m_FrameShader.reset(new Shader(*this, "Frame.fx"));
+    m_GeometryShader->SetSampler(0, D3D11_FILTER_ANISOTROPIC);
 }
 
 ID3D11Device& DX11Device::GetHandle() const
@@ -127,27 +130,35 @@ void DX11Device::GeometryBegin(Context& context)
         m_D3D11DeviceContext->RSSetViewports(1, &viewport); // Rasterizer Stage
     }
 
-    m_GeometryShader->Enable(*this);
-    m_GeometryBuffer->Enable(*this);
+    m_GeometryShader->Enable();
+    m_GeometryBuffer->Enable();
 }
 
 void DX11Device::GeometryEnd(Context& context)
 {
-    m_GeometryBuffer->Disable(*this);
+    m_GeometryBuffer->Disable();
 }
 
 void DX11Device::FrameBegin(Context& context)
 {
-    m_FrameShader->Enable(*this);
-    m_FrameBuffer->Enable(*this);
-    m_GeometryBuffer->EnableGeometry(*this);
+    m_GeometryBuffer->GetDiffuseTexture().Enable();
+    m_GeometryBuffer->GetSpecularTexture().Enable();
+    m_GeometryBuffer->GetPositionTexture().Enable();
+    m_GeometryBuffer->GetNormalTexture().Enable();
+
+    m_FrameShader->Enable();
+    m_FrameBuffer->Enable();
 }
 
 void DX11Device::FrameEnd(Context& context)
 {
+    m_GeometryBuffer->GetDiffuseTexture().Disable();
+    m_GeometryBuffer->GetSpecularTexture().Disable();
+    m_GeometryBuffer->GetPositionTexture().Disable();
+    m_GeometryBuffer->GetNormalTexture().Disable();
+
+    m_FrameBuffer->Disable();
+
     DXGI_PRESENT_PARAMETERS params{ };
     m_D3D11SwapChain1->Present1(0, 0, &params);
-
-    m_GeometryBuffer->DisableGeometry(*this);
-    m_FrameBuffer->Disable(*this);
 }

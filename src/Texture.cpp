@@ -26,10 +26,40 @@
 #include <DDSTextureLoader.h>
 #include <cassert>
 
-GeometryTexture::GeometryTexture(DX11Device& device, UINT slot, UINT width, UINT height)
-    : m_Slot(slot)
+Texture::Texture(DX11Device& device, UINT slot)
+    : DX11Resource(device)
+    , m_ResourceSlot(slot)
+{ }
+
+void Texture::Enable()
 {
-    ID3D11Device& deviceHandle = device.GetHandle();
+    ID3D11DeviceContext& deviceContext = m_Device.GetContext();
+
+    {
+        ID3D11ShaderResourceView* resourceViews[] = { m_ShaderView.Get() };
+        deviceContext.PSSetShaderResources(m_ResourceSlot, 1, resourceViews);
+    }
+}
+
+void Texture::Disable()
+{
+    ID3D11DeviceContext& deviceContext = m_Device.GetContext();
+
+    {
+        ID3D11ShaderResourceView* resourceViews[] = { nullptr };
+        deviceContext.PSSetShaderResources(m_ResourceSlot, 1, resourceViews);
+    }
+}
+
+ID3D11ShaderResourceView& Texture::GetShaderView() const
+{
+    return *m_ShaderView.Get();
+}
+
+GeometryTexture::GeometryTexture(DX11Device& device, UINT slot, UINT width, UINT height)
+    : Texture(device, slot)
+{
+    ID3D11Device& deviceHandle = m_Device.GetHandle();
 
     {
         D3D11_TEXTURE2D_DESC textureDesc{ };
@@ -54,70 +84,48 @@ GeometryTexture::GeometryTexture(DX11Device& device, UINT slot, UINT width, UINT
     }
 }
 
-void GeometryTexture::Enable(DX11Device& device)
+ID3D11RenderTargetView& GeometryTexture::GetRenderView() const
 {
-    ID3D11DeviceContext& deviceContext = device.GetContext();
-    deviceContext.PSSetShaderResources(m_Slot, 1, m_ShaderView.GetAddressOf());
+    return *m_RenderView.Get();
 }
 
-void GeometryTexture::Disable(DX11Device& device)
+DepthStencilTexture::DepthStencilTexture(DX11Device& device, UINT slot, UINT width, UINT height)
+    : Texture(device, slot)
 {
-    ID3D11DeviceContext& deviceContext = device.GetContext();
+    ID3D11Device& deviceHandle = m_Device.GetHandle();
 
     {
-        ID3D11ShaderResourceView* resourceViews[] = { nullptr };
-        deviceContext.PSSetShaderResources(m_Slot, 1, resourceViews);
+        D3D11_TEXTURE2D_DESC depthStencilDesc{ };
+        depthStencilDesc.Width = width;
+        depthStencilDesc.Height = height;
+        depthStencilDesc.MipLevels = 1;
+        depthStencilDesc.ArraySize = 1;
+        depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+        depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        depthStencilDesc.SampleDesc.Count = 1;
+        depthStencilDesc.SampleDesc.Quality = 0;
+
+        HRESULT hr = deviceHandle.CreateTexture2D(&depthStencilDesc, 0, &m_Texture);
+        assert(SUCCEEDED(hr));
+
+        hr = deviceHandle.CreateDepthStencilView(m_Texture.Get(), nullptr, &m_DepthStencilView);
+        assert(SUCCEEDED(hr));
     }
 }
 
-ID3D11RenderTargetView* GeometryTexture::GetRenderView() const
+ID3D11DepthStencilView& DepthStencilTexture::GetDepthStencilView() const
 {
-    return m_RenderView.Get();
+    return *m_DepthStencilView.Get();
 }
 
-ImageTexture::ImageTexture(DX11Device& device, UINT anisotropy, const std::wstring& source)
+ImageTexture::ImageTexture(DX11Device& device, UINT slot, const std::wstring& source)
+    : Texture(device, slot)
 {
-    ID3D11Device& deviceHandle = device.GetHandle();
+    ID3D11Device& deviceHandle = m_Device.GetHandle();
 
     {
         HRESULT hr = DirectX::CreateDDSTextureFromFile(&deviceHandle, source.c_str(), nullptr, m_ShaderView.GetAddressOf());
         assert(SUCCEEDED(hr));
-    }
-
-    {
-        D3D11_SAMPLER_DESC samplerDesc{ };
-        samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-        samplerDesc.MaxAnisotropy = anisotropy;
-        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-        samplerDesc.BorderColor[1] = 1.0f; // Green
-        samplerDesc.BorderColor[3] = 1.0f; // Alpha
-
-        HRESULT hr = deviceHandle.CreateSamplerState(&samplerDesc, &m_Sampler);
-        assert(SUCCEEDED(hr));
-    }
-}
-
-void ImageTexture::Enable(DX11Device& device)
-{
-    ID3D11DeviceContext& deviceContext = device.GetContext();
-
-    {
-        deviceContext.PSSetShaderResources(0, 1, m_ShaderView.GetAddressOf());
-        deviceContext.PSSetSamplers(0, 1, m_Sampler.GetAddressOf());
-    }
-}
-
-void ImageTexture::Disable(DX11Device& device)
-{
-    ID3D11DeviceContext& deviceContext = device.GetContext();
-
-    {
-        ID3D11ShaderResourceView* resourceViews[] = { nullptr };
-        deviceContext.PSSetShaderResources(0, 1, resourceViews);
-
-        ID3D11SamplerState* samplerStates[] = { nullptr };
-        deviceContext.PSSetSamplers(0, 1, samplerStates);
     }
 }

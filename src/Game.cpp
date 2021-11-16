@@ -35,7 +35,7 @@ void Game::Start(Context& context)
     m_Camera->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), -30.0f);
     m_Camera->Rotate(m_Camera->GetRight(), 30.0f);
 
-    m_Texture.reset(new ImageTexture(device, 16, L"Sviborg.dds"));
+    m_Texture.reset(new ImageTexture(device, 0, L"Sviborg.dds"));
 
     MeshData cube
     {
@@ -163,13 +163,11 @@ void Game::RenderGeometry(Context& context)
     Shader& geometryShader = device.GetGeometryShader();
     geometryShader.SetViewProjection(DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection()));
 
-    m_Texture->Enable(device);
+    m_Texture->Enable();
 
     for (auto& mesh : m_Meshes)
     {
         geometryShader.SetWorld(mesh->GetWorld());
-        geometryShader.Update(device);
-
         mesh->Draw(device);
     }
 }

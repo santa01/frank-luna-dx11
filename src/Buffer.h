@@ -22,53 +22,90 @@
 
 #pragma once
 
-#include "Texture.h"
+#include "Resource.h"
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <windows.h>
 #include <memory>
+#include <cassert>
 
 class DX11Device;
 
-class Buffer
+enum ResourceInput
 {
-public:
-    virtual ~Buffer() = default;
-    virtual void Enable(DX11Device& device) = 0;
-    virtual void Disable(DX11Device& device) = 0;
+    INPUT_VERTEX_SHADER = (1 << 0),
+    INPUT_PIXEL_SHADER  = (1 << 1)
 };
 
-class GeometryBuffer final : public Buffer
+template <typename T>
+class ConstantBuffer final : public DX11Resource
 {
 public:
-    GeometryBuffer(DX11Device& device);
-    void Enable(DX11Device& device) override;
-    void Disable(DX11Device& device) override;
+    ConstantBuffer(DX11Device& device, UINT slot, ResourceInput input)
+        : DX11Resource(device)
+        , m_ResourceSlot(slot)
+        , m_ResourceInput(input)
+    {
+        ID3D11Device& deviceHandle = m_Device.GetHandle();
 
-    void EnableGeometry(DX11Device& device) const;
-    void DisableGeometry(DX11Device& device) const;
+        {
+            D3D11_BUFFER_DESC desc{ };
+            desc.ByteWidth = sizeof(T);
+            desc.Usage = D3D11_USAGE_DYNAMIC;
+            desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+            desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+            HRESULT hr = deviceHandle.CreateBuffer(&desc, nullptr, &m_ConstantBuffer);
+            assert(SUCCEEDED(hr));
+        }
+    }
+
+    void Enable() override
+    {
+        ID3D11DeviceContext& deviceContext = m_Device.GetContext();
+
+        {
+            ID3D11Buffer* buffers[] = { m_ConstantBuffer.Get() };
+
+            if (m_ResourceInput & INPUT_VERTEX_SHADER)
+                deviceContext.VSSetConstantBuffers(m_ResourceSlot, 1, buffers);
+
+            if (m_ResourceInput & INPUT_PIXEL_SHADER)
+                deviceContext.PSSetConstantBuffers(m_ResourceSlot, 1, buffers);
+        }
+    }
+
+    void Disable() override
+    {
+        ID3D11DeviceContext& deviceContext = m_Device.GetContext();
+
+        {
+            ID3D11Buffer* buffers[] = { nullptr };
+
+            if (m_ResourceInput & INPUT_VERTEX_SHADER)
+                deviceContext.VSSetConstantBuffers(m_ResourceSlot, 1, buffers);
+
+            if (m_ResourceInput & INPUT_PIXEL_SHADER)
+                deviceContext.PSSetConstantBuffers(m_ResourceSlot, 1, buffers);
+        }
+    }
+
+    void Update(const T& data)
+    {
+        ID3D11DeviceContext& deviceContext = m_Device.GetContext();
+
+        {
+            D3D11_MAPPED_SUBRESOURCE mappedSubresource{ };
+
+            deviceContext.Map(m_ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
+            std::memcpy(mappedSubresource.pData, &data, sizeof(data));
+            deviceContext.Unmap(m_ConstantBuffer.Get(), 0);
+        }
+    }
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
+    UINT m_ResourceSlot{ 0 };
+    ResourceInput m_ResourceInput{ 0 };
 
-    std::unique_ptr<GeometryTexture> m_ColorTexture;
-    std::unique_ptr<GeometryTexture> m_PositionTexture;
-
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencilTexture;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_DepthStencilView;
-
-    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_GeometrySampler;
-};
-
-class FrameBuffer final : public Buffer
-{
-public:
-    FrameBuffer(DX11Device& device);
-    void Enable(DX11Device& device) override;
-    void Disable(DX11Device& device) override;
-
-private:
-    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
-
-    // Frame texture is a part of swap chain output buffer
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_FrameRenderView;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_ConstantBuffer;
 };

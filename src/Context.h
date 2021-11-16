@@ -59,7 +59,7 @@ public:
     Signal<Context&, int, int> OnMouseMove;
 
 private:
-    Application* m_Application{ nullptr };
+    Application& m_Application;
     ContextParams m_Params{ };
 
     std::unique_ptr<Window> m_Window;

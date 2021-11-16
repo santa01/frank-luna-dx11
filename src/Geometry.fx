@@ -39,7 +39,8 @@ struct VertexInput
 struct VertexOutput
 {
     float4 projectionPosition : SV_POSITION; // System Value
-    float4 worldPosition : POSITION;
+    float3 pixelPosition : PIXEL_POSITION;
+    float3 pixelNormal : PIXEL_NORMAL;
     float2 texcoord : TEXCOORD;
 };
 
@@ -49,7 +50,8 @@ VertexOutput Main(VertexInput input)
 
     float4 vertexPosition = float4(input.position, 1.0f);
     output.projectionPosition = mul(vertexPosition, mul(world, viewProjection));
-    output.worldPosition = mul(vertexPosition, world);
+    output.pixelPosition = mul(vertexPosition, world).xyz;
+    output.pixelNormal = float3(0.0f, 0.0f, 0.0f);
     output.texcoord = input.texcoord;
 
     return output;
@@ -62,25 +64,45 @@ VertexOutput Main(VertexInput input)
 Texture2D diffuseTexture : register(t0);
 SamplerState diffuseSampler : register(s0);
 
+cbuffer Material : register(b0)
+{
+    float ambientIntensity;
+    float diffuseIntensity;
+    float specularIntensity;
+    int specularHardness;
+    float3 diffuseColor;
+    float _padding1;
+    float3 specularColor;
+    float _padding2;
+};
+
 struct PixelInput
 {
     float4 projectionPosition : SV_POSITION; // System Value
-    float4 worldPosition : POSITION;
+    float3 pixelPosition: PIXEL_POSITION;
+    float3 pixelNormal: PIXEL_NORMAL;
     float2 texcoord : TEXCOORD;
 };
 
 struct PixelOutput
 {
-    float4 color : SV_Target0; // System Value
-    float4 position : SV_Target1; // System Value
+    float4 diffuse : SV_Target0;  // System Value
+    float4 specular : SV_Target1; // System Value
+    float4 position : SV_Target2; // System Value
+    float4 normal : SV_Target3;   // System Value
 };
 
 PixelOutput Main(PixelInput input)
 {
     PixelOutput output;
 
-    output.color = diffuseTexture.Sample(diffuseSampler, input.texcoord);
-    output.position = input.worldPosition;
+    float3 diffuseColor = diffuseTexture.Sample(diffuseSampler, input.texcoord);
+    float3 specularColor = diffuseColor;
+
+    output.diffuse = float4(diffuseColor, ambientIntensity);
+    output.specular = float4(specularColor, diffuseIntensity);
+    output.position = float4(input.pixelPosition, specularIntensity);
+    output.normal = float4(input.pixelNormal, specularHardness);
 
     return output;
 }

@@ -29,8 +29,9 @@
 #include <cassert>
 
 Shader::Shader(DX11Device& device, const std::string& source)
+    : DX11Resource(device)
 {
-    ID3D11Device& deviceHandle = device.GetHandle();
+    ID3D11Device& deviceHandle = m_Device.GetHandle();
 
     std::ifstream sourceFile(source, std::ios::in | std::ios::binary);
     if (!sourceFile)
@@ -94,63 +95,61 @@ Shader::Shader(DX11Device& device, const std::string& source)
         assert(SUCCEEDED(hr));
     }
 
-    {
-        D3D11_BUFFER_DESC desc{ };
-        desc.ByteWidth = sizeof(m_VertexTransformData);
-        desc.Usage = D3D11_USAGE_DYNAMIC;
-        desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-        HRESULT hr = deviceHandle.CreateBuffer(&desc, nullptr, &m_TransformBuffer);
-        assert(SUCCEEDED(hr));
-    }
-}
-
-const DirectX::XMMATRIX& Shader::GetWorld() const
-{
-    return m_VertexTransformData.m_World;
+    m_TransformBuffer.reset(new ConstantBuffer<TransformData>(device, 0, ResourceInput::INPUT_VERTEX_SHADER));
 }
 
 void Shader::SetWorld(const DirectX::XMMATRIX& world)
 {
-    m_VertexTransformData.m_World = world;
-}
-
-const DirectX::XMMATRIX& Shader::GetViewProjection() const
-{
-    return m_VertexTransformData.m_ViewProjection;
+    m_TransformData.m_World = world;
+    m_TransformBuffer->Update(m_TransformData);
 }
 
 void Shader::SetViewProjection(const DirectX::XMMATRIX& viewProjection)
 {
-    m_VertexTransformData.m_ViewProjection = viewProjection;
+    m_TransformData.m_ViewProjection = viewProjection;
+    m_TransformBuffer->Update(m_TransformData);
 }
 
-void Shader::Enable(DX11Device& device)
+void Shader::SetSampler(UINT slot, D3D11_FILTER filter)
 {
-    ID3D11DeviceContext& deviceContext = device.GetContext();
-
-    deviceContext.VSSetShader(m_VertexShader.Get(), nullptr, 0);
-    deviceContext.PSSetShader(m_PixelShader.Get(), nullptr, 0);
-
-    deviceContext.IASetInputLayout(m_InputLayout.Get()); // Input Assembly
-    deviceContext.VSSetConstantBuffers(0, 1, m_TransformBuffer.GetAddressOf());
-}
-
-void Shader::Update(DX11Device& device)
-{
-    UpdateVertexTransform(device);
-}
-
-void Shader::UpdateVertexTransform(DX11Device& device)
-{
-    ID3D11DeviceContext& deviceContext = device.GetContext();
+    ID3D11Device& deviceHandle = m_Device.GetHandle();
 
     {
-        D3D11_MAPPED_SUBRESOURCE mappedSubresource{ };
+        D3D11_SAMPLER_DESC samplerDesc{ };
+        samplerDesc.Filter = filter;
+        samplerDesc.MaxAnisotropy = 16;
+        samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+        samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+        samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+        samplerDesc.BorderColor[1] = 1.0f; // Green
+        samplerDesc.BorderColor[3] = 1.0f; // Alpha
 
-        deviceContext.Map(m_TransformBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
-        std::memcpy(mappedSubresource.pData, &m_VertexTransformData, sizeof(m_VertexTransformData));
-        deviceContext.Unmap(m_TransformBuffer.Get(), 0);
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>& sampler = m_TextureSamplers[slot];
+        HRESULT hr = deviceHandle.CreateSamplerState(&samplerDesc, sampler.ReleaseAndGetAddressOf());
+        assert(SUCCEEDED(hr));
     }
 }
+
+void Shader::Enable()
+{
+    ID3D11DeviceContext& deviceContext = m_Device.GetContext();
+
+    {
+        deviceContext.VSSetShader(m_VertexShader.Get(), nullptr, 0);
+        deviceContext.PSSetShader(m_PixelShader.Get(), nullptr, 0);
+        deviceContext.IASetInputLayout(m_InputLayout.Get()); // Input Assembly
+    }
+
+    m_TransformBuffer->Enable();
+
+    for (auto& textureSampler : m_TextureSamplers)
+    {
+        UINT slot = textureSampler.first;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState>& sampler = textureSampler.second;
+
+        ID3D11SamplerState* samplers[] = { sampler.Get() };
+        deviceContext.PSSetSamplers(slot, 1, samplers);
+    }
+}
+void Shader::Disable()
+{ }
