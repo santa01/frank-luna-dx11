@@ -35,7 +35,18 @@ void Game::Start(Context& context)
     m_Camera->Rotate(DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), -30.0f);
     m_Camera->Rotate(m_Camera->GetRight(), 30.0f);
 
+    m_Material.reset(new Material(device));
     m_Texture.reset(new ImageTexture(device, 0, L"Sviborg.dds"));
+
+    MeshData quad
+    {
+        StaticData::s_QuadVertices,
+        StaticData::s_QuadIndices,
+        sizeof(StaticData::s_QuadVertices),
+        sizeof(StaticData::s_QuadIndices)
+    };
+
+    m_Frame.reset(new Mesh(device, quad));
 
     MeshData cube
     {
@@ -57,15 +68,27 @@ void Game::Start(Context& context)
     mesh3->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 15.0f);
     mesh3->Move(DirectX::XMVectorSet(3.0f, 0.0f, 3.0f, 0.0f));
 
-    MeshData quad
-    {
-        StaticData::s_QuadVertices,
-        StaticData::s_QuadIndices,
-        sizeof(StaticData::s_QuadVertices),
-        sizeof(StaticData::s_QuadIndices)
-    };
+    auto& mesh4 = m_Meshes.emplace_back(new Mesh(device, quad));
+    mesh4->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 90.0f);
+    mesh4->Scale(DirectX::XMVectorSet(20.0f, 20.0f, 20.0f, 1.0f));
+    mesh4->Move(DirectX::XMVectorSet(0.0f, -2.0f, 0.0f, 0.0f));
 
-    m_Frame.reset(new Mesh(device, quad));
+    m_AmbientLight.reset(new AmbientLight(device));
+    m_AmbientLight->SetIntensity(0.25f);
+
+    //auto& light1 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Direction));
+    //auto& light1 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Point));
+    auto& light1 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Spot));
+    light1->SetColor({ 1.0f, 0.0f, 0.0f });
+    light1->Move(DirectX::XMVectorSet(0.0f, 5.0f, 5.0f, 0.0f));
+    light1->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 135.0f);
+
+    //auto& light2 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Direction));
+    //auto& light2 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Point));
+    auto& light2 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Spot));
+    light2->SetColor({ 0.0f, 1.0f, 0.0f });
+    light2->Move(DirectX::XMVectorSet(0.0f, 5.0f, -5.0f, 0.0f));
+    light2->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 45.0f);
 
     context.OnKeyDown.Connect(std::bind(&Game::OnKeyDown, this, std::placeholders::_1, std::placeholders::_2));
     context.OnKeyUp.Connect(std::bind(&Game::OnKeyUp, this, std::placeholders::_1, std::placeholders::_2));
@@ -163,6 +186,7 @@ void Game::RenderGeometry(Context& context)
     Shader& geometryShader = device.GetGeometryShader();
     geometryShader.SetViewProjection(DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection()));
 
+    m_Material->Enable();
     m_Texture->Enable();
 
     for (auto& mesh : m_Meshes)
@@ -172,8 +196,30 @@ void Game::RenderGeometry(Context& context)
     }
 }
 
-void Game::RenderFrame(Context& context)
+void Game::RenderAmbientLight(Context& context)
 {
     DX11Device& device = context.GetDevice();
-    m_Frame->Draw(device);
+
+    if (m_AmbientLight != nullptr)
+    {
+        m_AmbientLight->Enable();
+        m_Frame->Draw(device);
+    }
+}
+
+void Game::RenderDynamicLight(Context& context)
+{
+    DX11Device& device = context.GetDevice();
+
+    Shader& dynamicLightShader = device.GetDynamicLightShader();
+    dynamicLightShader.SetCameraPosition(m_Camera->GetPosition());
+
+    for (auto& dynamicLight : m_DynamicLights)
+    {
+        dynamicLightShader.SetLightPosition(dynamicLight->GetPosition());
+        dynamicLightShader.SetLightDirection(dynamicLight->GetDirection());
+
+        dynamicLight->Enable();
+        m_Frame->Draw(device);
+    }
 }

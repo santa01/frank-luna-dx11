@@ -25,7 +25,9 @@
 #include "Application.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "Material.h"
 #include "Texture.h"
+#include "Light.h"
 #include <memory>
 #include <vector>
 
@@ -45,14 +47,19 @@ public:
     void OnMouseMove(Context& context, int x, int y);
 
     void RenderGeometry(Context& context) override;
-    void RenderFrame(Context& context) override;
+    void RenderAmbientLight(Context& context) override;
+    void RenderDynamicLight(Context& context) override;
 
 private:
     std::unique_ptr<Camera> m_Camera;
+    std::unique_ptr<Mesh> m_Frame;
 
+    std::unique_ptr<Material> m_Material;
     std::unique_ptr<ImageTexture> m_Texture;
     std::vector<std::unique_ptr<Mesh>> m_Meshes;
-    std::unique_ptr<Mesh> m_Frame;
+
+    std::unique_ptr<AmbientLight> m_AmbientLight;
+    std::vector<std::unique_ptr<DynamicLight>> m_DynamicLights;
 
     bool m_IsLeftMouseButtonPressed{ false };
 };

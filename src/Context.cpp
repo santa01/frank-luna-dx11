@@ -67,9 +67,13 @@ void Context::Run()
         m_Application.RenderGeometry(*this);
         m_Device->GeometryEnd(*this);
 
-        m_Device->FrameBegin(*this);
-        m_Application.RenderFrame(*this);
-        m_Device->FrameEnd(*this);
+        m_Device->AmbientLightBegin(*this);
+        m_Application.RenderAmbientLight(*this);
+        m_Device->AmbientLightEnd(*this);
+
+        m_Device->DynamicLightBegin(*this);
+        m_Application.RenderDynamicLight(*this);
+        m_Device->DynamicLightEnd(*this);
 
         auto frameEnd = std::chrono::high_resolution_clock::now();
 

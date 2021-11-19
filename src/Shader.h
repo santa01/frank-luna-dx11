@@ -41,6 +41,10 @@ public:
     void SetWorld(const DirectX::XMMATRIX& world);
     void SetViewProjection(const DirectX::XMMATRIX& viewProjection);
 
+    void SetCameraPosition(const DirectX::XMVECTOR& position);
+    void SetLightPosition(const DirectX::XMVECTOR& position);
+    void SetLightDirection(const DirectX::XMVECTOR& direction);
+
     void Enable() override;
     void Disable() override;
 
@@ -49,10 +53,18 @@ private:
     // https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_buffer_desc
     struct TransformData
     {
-        // Describes a 4*4 matrix aligned on a 16-byte boundary that maps to four hardware vector registers.
+        // Describes a 4*4 matrix aligned on a 16-byte boundary that maps to four hardware vector registers
         // https://docs.microsoft.com/en-us/windows/win32/api/directxmath/ns-directxmath-xmmatrix
-        DirectX::XMMATRIX m_World{ DirectX::XMMatrixIdentity() };
+        DirectX::XMMATRIX m_WorldVertices{ DirectX::XMMatrixIdentity() };
+        DirectX::XMMATRIX m_WorldNormals{ DirectX::XMMatrixIdentity() };
         DirectX::XMMATRIX m_ViewProjection{ DirectX::XMMatrixIdentity() };
+    };
+
+    struct VectorsData
+    {
+        DirectX::XMVECTOR m_CameraPosition{ DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f) };
+        DirectX::XMVECTOR m_LightPosition{ DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f) };
+        DirectX::XMVECTOR m_LightDirection{ DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f) };
     };
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VertexShader;
@@ -61,6 +73,9 @@ private:
 
     TransformData m_TransformData{ };
     std::unique_ptr<ConstantBuffer<TransformData>> m_TransformBuffer;
+
+    VectorsData m_VectorsData{ };
+    std::unique_ptr<ConstantBuffer<VectorsData>> m_VectorsBuffer;
 
     std::map<UINT, Microsoft::WRL::ComPtr<ID3D11SamplerState>> m_TextureSamplers;
 };

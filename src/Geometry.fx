@@ -26,13 +26,15 @@
 
 cbuffer VertexTransform : register(b0)
 {
-    float4x4 world;
+    float4x4 worldVertices;
+    float4x4 worldNormals;
     float4x4 viewProjection;
 };
 
 struct VertexInput
 {
     float3 position : POSITION;
+    float3 normal : NORMAL;
     float2 texcoord : TEXCOORD;
 };
 
@@ -46,12 +48,15 @@ struct VertexOutput
 
 VertexOutput Main(VertexInput input)
 {
+    float4 vertexPosition = float4(input.position, 1.0f);
+    float4 vertexNormal = float4(input.normal, 1.0f);
+    float4x4 worldViewProjection = mul(worldVertices, viewProjection);
+
     VertexOutput output;
 
-    float4 vertexPosition = float4(input.position, 1.0f);
-    output.projectionPosition = mul(vertexPosition, mul(world, viewProjection));
-    output.pixelPosition = mul(vertexPosition, world).xyz;
-    output.pixelNormal = float3(0.0f, 0.0f, 0.0f);
+    output.projectionPosition = mul(vertexPosition, worldViewProjection);
+    output.pixelPosition = mul(vertexPosition, worldVertices).xyz;
+    output.pixelNormal = mul(vertexNormal, worldNormals).xyz;
     output.texcoord = input.texcoord;
 
     return output;
@@ -70,10 +75,6 @@ cbuffer Material : register(b0)
     float diffuseIntensity;
     float specularIntensity;
     int specularHardness;
-    float3 diffuseColor;
-    float _padding1;
-    float3 specularColor;
-    float _padding2;
 };
 
 struct PixelInput
@@ -94,10 +95,10 @@ struct PixelOutput
 
 PixelOutput Main(PixelInput input)
 {
-    PixelOutput output;
+    float3 diffuseColor = diffuseTexture.Sample(diffuseSampler, input.texcoord).rgb;
+    float3 specularColor = diffuseColor; // TODO
 
-    float3 diffuseColor = diffuseTexture.Sample(diffuseSampler, input.texcoord);
-    float3 specularColor = diffuseColor;
+    PixelOutput output;
 
     output.diffuse = float4(diffuseColor, ambientIntensity);
     output.specular = float4(specularColor, diffuseIntensity);

@@ -41,12 +41,15 @@ public:
     IDXGISwapChain1& GetSwapChain() const;
 
     Shader& GetGeometryShader() const;
-    Shader& GetFrameShader() const;
+    Shader& GetAmbientLightShader() const;
+    Shader& GetDynamicLightShader() const;
 
     void GeometryBegin(Context& context);
     void GeometryEnd(Context& context);
-    void FrameBegin(Context& context);
-    void FrameEnd(Context& context);
+    void AmbientLightBegin(Context& context);
+    void AmbientLightEnd(Context& context);
+    void DynamicLightBegin(Context& context);
+    void DynamicLightEnd(Context& context);
 
 private:
     Microsoft::WRL::ComPtr<ID3D11Device> m_D3D11Device;
@@ -57,5 +60,6 @@ private:
     std::unique_ptr<FrameBuffer> m_FrameBuffer;
 
     std::unique_ptr<Shader> m_GeometryShader;
-    std::unique_ptr<Shader> m_FrameShader;
+    std::unique_ptr<Shader> m_AmbientLightShader;
+    std::unique_ptr<Shader> m_DynamicLightShader;
 };

@@ -27,6 +27,7 @@
 struct VertexInput
 {
     float3 position : POSITION;
+    float3 normal : NORMAL;
     float2 texcoord : TEXCOORD;
 };
 
@@ -56,6 +57,12 @@ Texture2D positionTexture : register(t2);
 Texture2D normalTexture : register(t3);
 SamplerState geometrySampler : register(s0);
 
+cbuffer AmbientLight : register(b0)
+{
+    float3 ambientLightColor;
+    float ambientLightIntensity;
+};
+
 struct PixelInput
 {
     float4 position : SV_POSITION; // System Value
@@ -69,10 +76,16 @@ struct PixelOutput
 
 PixelOutput Main(PixelInput input)
 {
+    float4 diffuseSample = diffuseTexture.Sample(geometrySampler, input.texcoord);
+
+    float3 diffuseColor = diffuseSample.rgb;
+    float ambientIntensity = diffuseSample.a;
+
+    float3 pixelColor = mul(diffuseColor, ambientIntensity);
+    float3 lightColor = mul(ambientLightColor, ambientLightIntensity);
+
     PixelOutput output;
-
-    output.color = diffuseTexture.Sample(geometrySampler, input.texcoord);
-
+    output.color = float4(pixelColor * lightColor, 1.0f);
     return output;
 }
 

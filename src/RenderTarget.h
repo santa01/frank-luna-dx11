@@ -37,6 +37,7 @@ public:
     virtual ~RenderTarget() = default;
 
 protected:
+    Microsoft::WRL::ComPtr<ID3D11BlendState> m_BlendState;
     Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
 };
 

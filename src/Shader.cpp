@@ -47,7 +47,7 @@ Shader::Shader(DX11Device& device, const std::string& source)
     sourceFile.read(shaderSource.get(), sourceSize);
 
 #ifndef NDEBUG
-    UINT uFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_SKIP_OPTIMIZATION;
+    UINT uFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_SKIP_OPTIMIZATION;
 #else  // NDEBUG
     UINT uFlags = 0;
 #endif // NDEBUG
@@ -71,10 +71,11 @@ Shader::Shader(DX11Device& device, const std::string& source)
         D3D11_INPUT_ELEMENT_DESC inputDesc[] =
         {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 } // Offset for R32G32B32
+            { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }, // Offset for R32G32B32 (POSITION)
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }  // Offset for R32G32B32 + R32G32B32 (POSITION + NORMAL)
         };
 
-        hr = deviceHandle.CreateInputLayout(inputDesc, 2, shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), &m_InputLayout);
+        hr = deviceHandle.CreateInputLayout(inputDesc, 3, shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), &m_InputLayout);
         assert(SUCCEEDED(hr));
     }
 
@@ -96,11 +97,17 @@ Shader::Shader(DX11Device& device, const std::string& source)
     }
 
     m_TransformBuffer.reset(new ConstantBuffer<TransformData>(device, 0, ResourceInput::INPUT_VERTEX_SHADER));
+    m_VectorsBuffer.reset(new ConstantBuffer<VectorsData>(device, 1, ResourceInput::INPUT_PIXEL_SHADER));
 }
 
 void Shader::SetWorld(const DirectX::XMMATRIX& world)
 {
-    m_TransformData.m_World = world;
+    DirectX::XMVECTOR determinant(DirectX::XMMatrixDeterminant(world));
+    DirectX::XMMATRIX worldInverse(DirectX::XMMatrixInverse(&determinant, world));
+    DirectX::XMMATRIX worldInverseTranspose(DirectX::XMMatrixTranspose(worldInverse));
+
+    m_TransformData.m_WorldVertices = world;
+    m_TransformData.m_WorldNormals = worldInverseTranspose;
     m_TransformBuffer->Update(m_TransformData);
 }
 
@@ -108,6 +115,24 @@ void Shader::SetViewProjection(const DirectX::XMMATRIX& viewProjection)
 {
     m_TransformData.m_ViewProjection = viewProjection;
     m_TransformBuffer->Update(m_TransformData);
+}
+
+void Shader::SetCameraPosition(const DirectX::XMVECTOR& position)
+{
+    m_VectorsData.m_CameraPosition = position;
+    m_VectorsBuffer->Update(m_VectorsData);
+}
+
+void Shader::SetLightPosition(const DirectX::XMVECTOR& position)
+{
+    m_VectorsData.m_LightPosition = position;
+    m_VectorsBuffer->Update(m_VectorsData);
+}
+
+void Shader::SetLightDirection(const DirectX::XMVECTOR& direction)
+{
+    m_VectorsData.m_LightDirection = direction;
+    m_VectorsBuffer->Update(m_VectorsData);
 }
 
 void Shader::SetSampler(UINT slot, D3D11_FILTER filter)
@@ -141,6 +166,7 @@ void Shader::Enable()
     }
 
     m_TransformBuffer->Enable();
+    m_VectorsBuffer->Enable();
 
     for (auto& textureSampler : m_TextureSamplers)
     {

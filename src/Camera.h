@@ -65,7 +65,7 @@ private:
     float m_Fov{ 90.0f };
     float m_AspectRatio{ 1.0f };
     float m_NearPlane{ 0.1f };
-    float m_FarPlane{ 10.0f };
+    float m_FarPlane{ 100.0f };
 
     DirectX::XMMATRIX m_View{ DirectX::XMMatrixIdentity() };
     DirectX::XMMATRIX m_Projection{ DirectX::XMMatrixIdentity() };

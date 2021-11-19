@@ -36,6 +36,21 @@ GeometryBuffer::GeometryBuffer(DX11Device& device)
     IDXGISwapChain1& swapChain = m_Device.GetSwapChain();
 
     {
+        D3D11_RENDER_TARGET_BLEND_DESC targetBlendDesc{ };
+        targetBlendDesc.BlendEnable = FALSE;
+        targetBlendDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+        D3D11_BLEND_DESC blendDesc{ };
+        blendDesc.RenderTarget[0] = targetBlendDesc;
+        blendDesc.RenderTarget[1] = targetBlendDesc;
+        blendDesc.RenderTarget[2] = targetBlendDesc;
+        blendDesc.RenderTarget[3] = targetBlendDesc;
+
+        HRESULT hr = deviceHandle.CreateBlendState(&blendDesc, &m_BlendState);
+        assert(SUCCEEDED(hr));
+    }
+
+    {
         D3D11_RASTERIZER_DESC rasterizerDesc{ };
         rasterizerDesc.FillMode = D3D11_FILL_SOLID;
         rasterizerDesc.CullMode = D3D11_CULL_BACK;
@@ -75,6 +90,7 @@ void GeometryBuffer::Enable()
         };
 
         deviceContext.OMSetRenderTargets(4, renderViews, &m_DepthStencilTexture->GetDepthStencilView()); // Output Merger
+        deviceContext.OMSetBlendState(m_BlendState.Get(), nullptr, 0xffffffff); // Output Merger
         deviceContext.RSSetState(m_RasterizerState.Get()); // Rasterizer State
 
         FLOAT zero[] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -95,6 +111,7 @@ void GeometryBuffer::Disable()
         // Unbound render targets in case target textures to be used in shaders later
         ID3D11RenderTargetView* renderViews[] = { nullptr, nullptr, nullptr, nullptr };
         deviceContext.OMSetRenderTargets(4, renderViews, nullptr); // Output Merger
+        deviceContext.OMSetBlendState(nullptr, nullptr, 0xffffffff); // Output Merger
 
         // Reset rasterizer state to default just in case
         deviceContext.RSSetState(nullptr); // Rasterizer State
@@ -133,6 +150,24 @@ FrameBuffer::FrameBuffer(DX11Device& device)
     IDXGISwapChain1& swapChain = m_Device.GetSwapChain();
 
     {
+        D3D11_RENDER_TARGET_BLEND_DESC targetBlendDesc{ };
+        targetBlendDesc.BlendEnable = TRUE;
+        targetBlendDesc.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+        targetBlendDesc.SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+        targetBlendDesc.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+        targetBlendDesc.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+        targetBlendDesc.BlendOp = D3D11_BLEND_OP_ADD;
+        targetBlendDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+        targetBlendDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+        D3D11_BLEND_DESC blendDesc{ };
+        blendDesc.RenderTarget[0] = targetBlendDesc;
+
+        HRESULT hr = deviceHandle.CreateBlendState(&blendDesc, &m_BlendState);
+        assert(SUCCEEDED(hr));
+    }
+
+    {
         D3D11_RASTERIZER_DESC rasterizerDesc{ };
         rasterizerDesc.FillMode = D3D11_FILL_SOLID;
         rasterizerDesc.CullMode = D3D11_CULL_BACK;
@@ -160,6 +195,7 @@ void FrameBuffer::Enable()
     {
         ID3D11RenderTargetView* renderViews[] = { m_FrameRenderView.Get() };
         deviceContext.OMSetRenderTargets(1, renderViews, nullptr); // Output Merger
+        deviceContext.OMSetBlendState(m_BlendState.Get(), nullptr, 0xffffffff); // Output Merger
         deviceContext.RSSetState(m_RasterizerState.Get()); // Rasterizer State
 
         FLOAT black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -175,6 +211,7 @@ void FrameBuffer::Disable()
         // Unbound render targets in case target textures to be used in shaders later
         ID3D11RenderTargetView* renderViews[] = { nullptr };
         deviceContext.OMSetRenderTargets(1, renderViews, nullptr); // Output Merger
+        deviceContext.OMSetBlendState(nullptr, nullptr, 0xffffffff); // Output Merger
 
         // Reset rasterizer state to default just in case
         deviceContext.RSSetState(nullptr); // Rasterizer State
