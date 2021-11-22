@@ -66,11 +66,17 @@ class DynamicLight final
 public:
     DynamicLight(DX11Device& device, LightType type);
 
+    float GetFalloff() const;
+    void SetFalloff(float falloff);
+
+    float GetSpotAngle() const;
+    void SetSpotAngle(float angle);
+
+    float GetSpotBorder() const;
+    void SetSpotBorder(float border);
+
     const DirectX::XMFLOAT3& GetColor() const;
     void SetColor(const DirectX::XMFLOAT3& color);
-
-    int GetSpotHardness() const;
-    void SetSpotHardness(int hardness);
 
     const DirectX::XMVECTOR& GetPosition() const;
     void Move(const DirectX::XMVECTOR& position);
@@ -86,9 +92,11 @@ private:
     struct LightData
     {
         LightType m_Type{ LightType::Direction };
+        float m_Falloff{ 15.0f };
+        float m_SpotAngle{ DirectX::XM_PIDIV2 / 3.0f };
+        float m_SpotBorder{ 0.25f };
         DirectX::XMFLOAT3 m_Color{ 1.0f, 1.0f, 1.0f };
-        int m_SpotHardness{ 15 };
-        DirectX::XMFLOAT3 m_Padding{ 0.0f, 0.0f, 0.0f };
+        float m_Padding{ 0.0f };
     };
 
     DirectX::XMVECTOR m_Position{ DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f) };

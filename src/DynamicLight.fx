@@ -60,9 +60,11 @@ SamplerState geometrySampler : register(s0);
 cbuffer DynamicLight : register(b0)
 {
     int dynamicLightType;
+    float dynamicLightFalloff;
+    float dynamicLightSpotAngle;
+    float dynamicLightSpotBorder;
     float3 dynamicLightColor;
-    int dynamicLightSpotHardness;
-    float3 padding;
+    float dynamicLightPadding;
 };
 
 cbuffer WorldVectors : register(b1)
@@ -134,12 +136,28 @@ PixelOutput Main(PixelInput input)
     if (dynamicLightType == 2) // LightType::Spot
     {
         float3 directionFromLightToPixel = normalize(pixelPosition - lightPosition.xyz);
-        float spotIntensity = dot(directionFromLight, directionFromLightToPixel);
-        spotIntensity = max(spotIntensity, 0.0f);
-        spotIntensity = pow(spotIntensity, dynamicLightSpotHardness);
+        float dynamicLightAngleCos = dot(directionFromLight, directionFromLightToPixel);
+        dynamicLightAngleCos = max(dynamicLightAngleCos, 0.0f);
+
+        float dynamicLightHardAngleCos = cos(dynamicLightSpotAngle * (1.0f - dynamicLightSpotBorder));
+        float dynamicLightSoftAngleCos = cos(dynamicLightSpotAngle);
+        float spotIntensity = (dynamicLightSoftAngleCos - dynamicLightAngleCos) / (dynamicLightSoftAngleCos - dynamicLightHardAngleCos);
+        spotIntensity = saturate(spotIntensity);
 
         diffuseLightIntensity *= spotIntensity;
         specularLightIntensity *= spotIntensity;
+    }
+
+    // --- Calculate light energy falloff
+
+    if (dynamicLightType != 1) // LightType::Direction
+    {
+        float dynamicLightFalloffSquare = pow(dynamicLightFalloff, 2);
+        float lightDistanceFalloffSquare = pow(distance(pixelPosition, lightPosition.xyz), 2);
+        float lightFalloff = dynamicLightFalloffSquare / (dynamicLightFalloffSquare + lightDistanceFalloffSquare);
+
+        diffuseLightIntensity *= lightFalloff;
+        specularLightIntensity *= lightFalloff;
     }
 
     PixelOutput output;

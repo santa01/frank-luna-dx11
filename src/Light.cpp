@@ -64,6 +64,39 @@ DynamicLight::DynamicLight(DX11Device& device, LightType type)
     m_LightBuffer->Update(m_LightData);
 }
 
+float DynamicLight::GetFalloff() const
+{
+    return m_LightData.m_Falloff;
+}
+
+void DynamicLight::SetFalloff(float falloff)
+{
+    m_LightData.m_Falloff = falloff;
+    m_LightBuffer->Update(m_LightData);
+}
+
+float DynamicLight::GetSpotAngle() const
+{
+    return DirectX::XMConvertToDegrees(m_LightData.m_SpotAngle);
+}
+
+void DynamicLight::SetSpotAngle(float angle)
+{
+    m_LightData.m_SpotAngle = DirectX::XMConvertToRadians(angle);
+    m_LightBuffer->Update(m_LightData);
+}
+
+float DynamicLight::GetSpotBorder() const
+{
+    return m_LightData.m_SpotBorder;
+}
+
+void DynamicLight::SetSpotBorder(float border)
+{
+    m_LightData.m_SpotBorder = border;
+    m_LightBuffer->Update(m_LightData);
+}
+
 const DirectX::XMFLOAT3& DynamicLight::GetColor() const
 {
     return m_LightData.m_Color;
@@ -72,17 +105,6 @@ const DirectX::XMFLOAT3& DynamicLight::GetColor() const
 void DynamicLight::SetColor(const DirectX::XMFLOAT3& color)
 {
     m_LightData.m_Color = color;
-    m_LightBuffer->Update(m_LightData);
-}
-
-int DynamicLight::GetSpotHardness() const
-{
-    return m_LightData.m_SpotHardness;
-}
-
-void DynamicLight::SetSpotHardness(int hardness)
-{
-    m_LightData.m_SpotHardness = hardness;
     m_LightBuffer->Update(m_LightData);
 }
 
