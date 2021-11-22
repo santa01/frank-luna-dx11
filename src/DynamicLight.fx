@@ -51,6 +51,10 @@ VertexOutput Main(VertexInput input)
 
 #ifdef PIXEL_SHADER
 
+#define LIGHT_DIRECTION 0
+#define LIGHT_POINT     1
+#define LIGHT_SPOT      2
+
 Texture2D diffuseTexture : register(t0);
 Texture2D specularTexture : register(t1);
 Texture2D positionTexture : register(t2);
@@ -115,7 +119,7 @@ PixelOutput Main(PixelInput input)
     float3 pixelPosition = positionSample.xyz;
     float3 pixelNormal = normalize(normalSample.xyz);
 
-    float3 directionFromLight = normalize(dynamicLightType == 1 ? pixelPosition - lightPosition.xyz : lightDirection.xyz); // LightType::Point
+    float3 directionFromLight = normalize(dynamicLightType == LIGHT_POINT ? pixelPosition - lightPosition.xyz : lightDirection.xyz);
     float3 directionToLight = -directionFromLight;
 
     float diffuseLightIntensity = dot(directionToLight, pixelNormal);
@@ -131,9 +135,9 @@ PixelOutput Main(PixelInput input)
     specularLightIntensity = max(specularLightIntensity, 0.0f);
     specularLightIntensity = pow(specularLightIntensity, specularHardness);
 
-    // --- Calculate spot light falloff inside the light cone (cender to border)
+    // --- Calculate spot light falloff inside the light cone
 
-    if (dynamicLightType == 2) // LightType::Spot
+    if (dynamicLightType == LIGHT_SPOT)
     {
         float3 directionFromLightToPixel = normalize(pixelPosition - lightPosition.xyz);
         float dynamicLightAngleCos = dot(directionFromLight, directionFromLightToPixel);
@@ -150,7 +154,7 @@ PixelOutput Main(PixelInput input)
 
     // --- Calculate light energy falloff
 
-    if (dynamicLightType != 1) // LightType::Direction
+    if (dynamicLightType != LIGHT_DIRECTION)
     {
         float dynamicLightFalloffSquare = pow(dynamicLightFalloff, 2);
         float lightDistanceFalloffSquare = pow(distance(pixelPosition, lightPosition.xyz), 2);

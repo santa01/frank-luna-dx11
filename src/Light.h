@@ -92,7 +92,7 @@ private:
     struct LightData
     {
         LightType m_Type{ LightType::Direction };
-        float m_Falloff{ 15.0f };
+        float m_Falloff{ 20.0f };
         float m_SpotAngle{ DirectX::XM_PIDIV2 / 3.0f };
         float m_SpotBorder{ 0.25f };
         DirectX::XMFLOAT3 m_Color{ 1.0f, 1.0f, 1.0f };
