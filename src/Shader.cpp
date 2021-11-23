@@ -108,31 +108,26 @@ void Shader::SetWorld(const DirectX::XMMATRIX& world)
 
     m_TransformData.m_WorldVertices = world;
     m_TransformData.m_WorldNormals = worldInverseTranspose;
-    m_TransformBuffer->Update(m_TransformData);
 }
 
 void Shader::SetViewProjection(const DirectX::XMMATRIX& viewProjection)
 {
     m_TransformData.m_ViewProjection = viewProjection;
-    m_TransformBuffer->Update(m_TransformData);
 }
 
 void Shader::SetCameraPosition(const DirectX::XMVECTOR& position)
 {
     m_VectorsData.m_CameraPosition = position;
-    m_VectorsBuffer->Update(m_VectorsData);
 }
 
 void Shader::SetLightPosition(const DirectX::XMVECTOR& position)
 {
     m_VectorsData.m_LightPosition = position;
-    m_VectorsBuffer->Update(m_VectorsData);
 }
 
 void Shader::SetLightDirection(const DirectX::XMVECTOR& direction)
 {
     m_VectorsData.m_LightDirection = direction;
-    m_VectorsBuffer->Update(m_VectorsData);
 }
 
 void Shader::SetSampler(UINT slot, D3D11_FILTER filter)
@@ -153,6 +148,16 @@ void Shader::SetSampler(UINT slot, D3D11_FILTER filter)
         HRESULT hr = deviceHandle.CreateSamplerState(&samplerDesc, sampler.ReleaseAndGetAddressOf());
         assert(SUCCEEDED(hr));
     }
+}
+
+void Shader::UpdateTransform()
+{
+    m_TransformBuffer->Update(m_TransformData);
+}
+
+void Shader::UpdateVectors()
+{
+    m_VectorsBuffer->Update(m_VectorsData);
 }
 
 void Shader::Enable()

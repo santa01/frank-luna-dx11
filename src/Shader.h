@@ -37,13 +37,17 @@ class Shader final : public DX11Resource
 public:
     Shader(DX11Device& device, const std::string& source);
 
-    void SetSampler(UINT slot, D3D11_FILTER filter);
     void SetWorld(const DirectX::XMMATRIX& world);
     void SetViewProjection(const DirectX::XMMATRIX& viewProjection);
 
     void SetCameraPosition(const DirectX::XMVECTOR& position);
     void SetLightPosition(const DirectX::XMVECTOR& position);
     void SetLightDirection(const DirectX::XMVECTOR& direction);
+
+    void SetSampler(UINT slot, D3D11_FILTER filter);
+
+    void UpdateTransform();
+    void UpdateVectors();
 
     void Enable() override;
     void Disable() override;

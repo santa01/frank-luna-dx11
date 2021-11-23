@@ -26,7 +26,6 @@
 Material::Material(DX11Device& device)
 {
     m_MaterialBuffer.reset(new ConstantBuffer<MaterialData>(device, 0, ResourceInput::INPUT_PIXEL_SHADER));
-    m_MaterialBuffer->Update(m_MaterialData);
 }
 
 float Material::GetAmbientIntensity() const
@@ -37,7 +36,7 @@ float Material::GetAmbientIntensity() const
 void Material::SetAmbientIntensity(float intensity)
 {
     m_MaterialData.m_AmbientIntensity = intensity;
-    m_MaterialBuffer->Update(m_MaterialData);
+    m_IsDataDirty = true;
 }
 
 float Material::GetDiffuseIntensity() const
@@ -48,7 +47,7 @@ float Material::GetDiffuseIntensity() const
 void Material::SetDiffuseIntensity(float intensity)
 {
     m_MaterialData.m_DiffuseIntensity = intensity;
-    m_MaterialBuffer->Update(m_MaterialData);
+    m_IsDataDirty = true;
 }
 
 float Material::GetSpecularIntensity() const
@@ -59,7 +58,7 @@ float Material::GetSpecularIntensity() const
 void Material::SetSpecularIntensity(float intensity)
 {
     m_MaterialData.m_SpecularIntensity = intensity;
-    m_MaterialBuffer->Update(m_MaterialData);
+    m_IsDataDirty = true;
 }
 
 int Material::GetSpecularHardness() const
@@ -70,10 +69,16 @@ int Material::GetSpecularHardness() const
 void Material::SetSpecularHardness(int hardness)
 {
     m_MaterialData.m_SpecularHardness = hardness;
-    m_MaterialBuffer->Update(m_MaterialData);
+    m_IsDataDirty = true;
 }
 
 void Material::Enable()
 {
+    if (m_IsDataDirty)
+    {
+        m_MaterialBuffer->Update(m_MaterialData);
+        m_IsDataDirty = false;
+    }
+
     m_MaterialBuffer->Enable();
 }

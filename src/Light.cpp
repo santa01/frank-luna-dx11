@@ -26,7 +26,6 @@
 AmbientLight::AmbientLight(DX11Device& device)
 {
     m_LightBuffer.reset(new ConstantBuffer<LightData>(device, 0, ResourceInput::INPUT_PIXEL_SHADER));
-    m_LightBuffer->Update(m_LightData);
 }
 
 const DirectX::XMFLOAT3& AmbientLight::GetColor() const
@@ -37,7 +36,7 @@ const DirectX::XMFLOAT3& AmbientLight::GetColor() const
 void AmbientLight::SetColor(const DirectX::XMFLOAT3& color)
 {
     m_LightData.m_Color = color;
-    m_LightBuffer->Update(m_LightData);
+    m_IsDataDirty = true;
 }
 
 float AmbientLight::GetIntensity() const
@@ -48,20 +47,24 @@ float AmbientLight::GetIntensity() const
 void AmbientLight::SetIntensity(float intensity)
 {
     m_LightData.m_Intensity = intensity;
-    m_LightBuffer->Update(m_LightData);
+    m_IsDataDirty = true;
 }
 
 void AmbientLight::Enable()
 {
+    if (m_IsDataDirty)
+    {
+        m_LightBuffer->Update(m_LightData);
+        m_IsDataDirty = false;
+    }
+
     m_LightBuffer->Enable();
 }
 
 DynamicLight::DynamicLight(DX11Device& device, LightType type)
 {
     m_LightData.m_Type = type;
-
     m_LightBuffer.reset(new ConstantBuffer<LightData>(device, 0, ResourceInput::INPUT_PIXEL_SHADER));
-    m_LightBuffer->Update(m_LightData);
 }
 
 float DynamicLight::GetFalloff() const
@@ -72,7 +75,7 @@ float DynamicLight::GetFalloff() const
 void DynamicLight::SetFalloff(float falloff)
 {
     m_LightData.m_Falloff = falloff;
-    m_LightBuffer->Update(m_LightData);
+    m_IsDataDirty = true;
 }
 
 float DynamicLight::GetSpotAngle() const
@@ -83,7 +86,7 @@ float DynamicLight::GetSpotAngle() const
 void DynamicLight::SetSpotAngle(float angle)
 {
     m_LightData.m_SpotAngle = DirectX::XMConvertToRadians(angle);
-    m_LightBuffer->Update(m_LightData);
+    m_IsDataDirty = true;
 }
 
 float DynamicLight::GetSpotBorder() const
@@ -94,7 +97,7 @@ float DynamicLight::GetSpotBorder() const
 void DynamicLight::SetSpotBorder(float border)
 {
     m_LightData.m_SpotBorder = border;
-    m_LightBuffer->Update(m_LightData);
+    m_IsDataDirty = true;
 }
 
 const DirectX::XMFLOAT3& DynamicLight::GetColor() const
@@ -105,7 +108,7 @@ const DirectX::XMFLOAT3& DynamicLight::GetColor() const
 void DynamicLight::SetColor(const DirectX::XMFLOAT3& color)
 {
     m_LightData.m_Color = color;
-    m_LightBuffer->Update(m_LightData);
+    m_IsDataDirty = true;
 }
 
 const DirectX::XMVECTOR& DynamicLight::GetPosition() const
@@ -131,5 +134,11 @@ void DynamicLight::Rotate(const DirectX::XMVECTOR& axis, float angle)
 
 void DynamicLight::Enable()
 {
+    if (m_IsDataDirty)
+    {
+        m_LightBuffer->Update(m_LightData);
+        m_IsDataDirty = false;
+    }
+
     m_LightBuffer->Enable();
 }

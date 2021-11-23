@@ -59,5 +59,7 @@ private:
     };
 
     MaterialData m_MaterialData{ };
+    bool m_IsDataDirty{ true };
+
     std::unique_ptr<ConstantBuffer<MaterialData>> m_MaterialBuffer;
 };

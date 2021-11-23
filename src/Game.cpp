@@ -192,6 +192,8 @@ void Game::RenderGeometry(Context& context)
     for (auto& mesh : m_Meshes)
     {
         geometryShader.SetWorld(mesh->GetWorld());
+        geometryShader.UpdateTransform();
+
         mesh->Draw(device);
     }
 }
@@ -218,6 +220,7 @@ void Game::RenderDynamicLight(Context& context)
     {
         dynamicLightShader.SetLightPosition(dynamicLight->GetPosition());
         dynamicLightShader.SetLightDirection(dynamicLight->GetDirection());
+        dynamicLightShader.UpdateVectors();
 
         dynamicLight->Enable();
         m_Frame->Draw(device);

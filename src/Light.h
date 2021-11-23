@@ -58,6 +58,8 @@ private:
     };
 
     LightData m_LightData{ };
+    bool m_IsDataDirty{ true };
+
     std::unique_ptr<ConstantBuffer<LightData>> m_LightBuffer;
 };
 
@@ -103,5 +105,7 @@ private:
     DirectX::XMVECTOR m_Direction{ DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f) };
 
     LightData m_LightData{ };
+    bool m_IsDataDirty{ true };
+
     std::unique_ptr<ConstantBuffer<LightData>> m_LightBuffer;
 };
