@@ -30,43 +30,22 @@ class DX11Device;
 
 enum class LightType
 {
+    Ambient,
     Direction,
     Point,
     Spot
 };
 
-class AmbientLight final
+class Light final
 {
 public:
-    AmbientLight(DX11Device& device);
+    Light(DX11Device& device, LightType type);
 
     const DirectX::XMFLOAT3& GetColor() const;
     void SetColor(const DirectX::XMFLOAT3& color);
 
     float GetIntensity() const;
     void SetIntensity(float intensity);
-
-    void Enable();
-
-private:
-    // If the bind flag is D3D11_BIND_CONSTANT_BUFFER, you must set the ByteWidth value in multiples of 16
-    // https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_buffer_desc
-    struct LightData
-    {
-        DirectX::XMFLOAT3 m_Color{ 1.0f, 1.0f, 1.0f };
-        float m_Intensity{ 1.0f };
-    };
-
-    LightData m_LightData{ };
-    bool m_IsDataDirty{ true };
-
-    std::unique_ptr<ConstantBuffer<LightData>> m_LightBuffer;
-};
-
-class DynamicLight final
-{
-public:
-    DynamicLight(DX11Device& device, LightType type);
 
     float GetFalloff() const;
     void SetFalloff(float falloff);
@@ -76,9 +55,6 @@ public:
 
     float GetSpotBorder() const;
     void SetSpotBorder(float border);
-
-    const DirectX::XMFLOAT3& GetColor() const;
-    void SetColor(const DirectX::XMFLOAT3& color);
 
     const DirectX::XMVECTOR& GetPosition() const;
     void Move(const DirectX::XMVECTOR& position);
@@ -94,11 +70,11 @@ private:
     struct LightData
     {
         LightType m_Type{ LightType::Direction };
+        DirectX::XMFLOAT3 m_Color{ 1.0f, 1.0f, 1.0f };
+        float m_Intensity{ 1.0f };
         float m_Falloff{ 20.0f };
         float m_SpotAngle{ DirectX::XM_PIDIV2 / 3.0f };
         float m_SpotBorder{ 0.25f };
-        DirectX::XMFLOAT3 m_Color{ 1.0f, 1.0f, 1.0f };
-        float m_Padding{ 0.0f };
     };
 
     DirectX::XMVECTOR m_Position{ DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f) };

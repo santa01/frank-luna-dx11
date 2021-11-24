@@ -73,19 +73,19 @@ void Game::Start(Context& context)
     mesh4->Scale(DirectX::XMVectorSet(20.0f, 20.0f, 20.0f, 1.0f));
     mesh4->Move(DirectX::XMVectorSet(0.0f, -2.0f, 0.0f, 0.0f));
 
-    m_AmbientLight.reset(new AmbientLight(device));
-    m_AmbientLight->SetIntensity(0.25f);
+    m_AmbientLight.reset(new Light(device, LightType::Ambient));
+    m_AmbientLight->SetIntensity(0.2f);
 
     //auto& light1 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Direction));
     //auto& light1 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Point));
-    auto& light1 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Spot));
+    auto& light1 = m_Lights.emplace_back(new Light(device, LightType::Spot));
     light1->SetColor({ 1.0f, 0.0f, 0.0f });
     light1->Move(DirectX::XMVectorSet(0.0f, 5.0f, 5.0f, 0.0f));
     light1->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 135.0f);
 
     //auto& light2 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Direction));
     //auto& light2 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Point));
-    auto& light2 = m_DynamicLights.emplace_back(new DynamicLight(device, LightType::Spot));
+    auto& light2 = m_Lights.emplace_back(new Light(device, LightType::Spot));
     light2->SetColor({ 0.0f, 1.0f, 0.0f });
     light2->Move(DirectX::XMVectorSet(0.0f, 5.0f, -5.0f, 0.0f));
     light2->Rotate(DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), 45.0f);
@@ -183,16 +183,16 @@ void Game::RenderGeometry(Context& context)
 {
     DX11Device& device = context.GetDevice();
 
-    Shader& geometryShader = device.GetGeometryShader();
-    geometryShader.SetViewProjection(DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection()));
+    Shader& shader = device.GetGeometryShader();
+    shader.SetViewProjection(DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection()));
 
     m_Material->Enable();
     m_Texture->Enable();
 
     for (auto& mesh : m_Meshes)
     {
-        geometryShader.SetWorld(mesh->GetWorld());
-        geometryShader.UpdateTransform();
+        shader.SetWorld(mesh->GetWorld());
+        shader.UpdateTransform();
 
         mesh->Draw(device);
     }
@@ -213,16 +213,16 @@ void Game::RenderDynamicLight(Context& context)
 {
     DX11Device& device = context.GetDevice();
 
-    Shader& dynamicLightShader = device.GetDynamicLightShader();
-    dynamicLightShader.SetCameraPosition(m_Camera->GetPosition());
+    Shader& shader = device.GetDynamicLightShader();
+    shader.SetCameraPosition(m_Camera->GetPosition());
 
-    for (auto& dynamicLight : m_DynamicLights)
+    for (auto& light : m_Lights)
     {
-        dynamicLightShader.SetLightPosition(dynamicLight->GetPosition());
-        dynamicLightShader.SetLightDirection(dynamicLight->GetDirection());
-        dynamicLightShader.UpdateVectors();
+        shader.SetLightPosition(light->GetPosition());
+        shader.SetLightDirection(light->GetDirection());
+        shader.UpdateVectors();
 
-        dynamicLight->Enable();
+        light->Enable();
         m_Frame->Draw(device);
     }
 }

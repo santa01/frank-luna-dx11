@@ -52,14 +52,14 @@ public:
 
 private:
     std::unique_ptr<Camera> m_Camera;
-    std::unique_ptr<Mesh> m_Frame;
-
     std::unique_ptr<Material> m_Material;
     std::unique_ptr<ImageTexture> m_Texture;
+
+    std::unique_ptr<Mesh> m_Frame;
     std::vector<std::unique_ptr<Mesh>> m_Meshes;
 
-    std::unique_ptr<AmbientLight> m_AmbientLight;
-    std::vector<std::unique_ptr<DynamicLight>> m_DynamicLights;
+    std::unique_ptr<Light> m_AmbientLight;
+    std::vector<std::unique_ptr<Light>> m_Lights;
 
     bool m_IsLeftMouseButtonPressed{ false };
 };

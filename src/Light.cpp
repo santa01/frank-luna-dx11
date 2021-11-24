@@ -23,116 +23,89 @@
 #include "Light.h"
 #include "Device.h"
 
-AmbientLight::AmbientLight(DX11Device& device)
-{
-    m_LightBuffer.reset(new ConstantBuffer<LightData>(device, 0, ResourceInput::INPUT_PIXEL_SHADER));
-}
-
-const DirectX::XMFLOAT3& AmbientLight::GetColor() const
-{
-    return m_LightData.m_Color;
-}
-
-void AmbientLight::SetColor(const DirectX::XMFLOAT3& color)
-{
-    m_LightData.m_Color = color;
-    m_IsDataDirty = true;
-}
-
-float AmbientLight::GetIntensity() const
-{
-    return m_LightData.m_Intensity;
-}
-
-void AmbientLight::SetIntensity(float intensity)
-{
-    m_LightData.m_Intensity = intensity;
-    m_IsDataDirty = true;
-}
-
-void AmbientLight::Enable()
-{
-    if (m_IsDataDirty)
-    {
-        m_LightBuffer->Update(m_LightData);
-        m_IsDataDirty = false;
-    }
-
-    m_LightBuffer->Enable();
-}
-
-DynamicLight::DynamicLight(DX11Device& device, LightType type)
+Light::Light(DX11Device& device, LightType type)
 {
     m_LightData.m_Type = type;
     m_LightBuffer.reset(new ConstantBuffer<LightData>(device, 0, ResourceInput::INPUT_PIXEL_SHADER));
 }
 
-float DynamicLight::GetFalloff() const
-{
-    return m_LightData.m_Falloff;
-}
-
-void DynamicLight::SetFalloff(float falloff)
-{
-    m_LightData.m_Falloff = falloff;
-    m_IsDataDirty = true;
-}
-
-float DynamicLight::GetSpotAngle() const
-{
-    return DirectX::XMConvertToDegrees(m_LightData.m_SpotAngle);
-}
-
-void DynamicLight::SetSpotAngle(float angle)
-{
-    m_LightData.m_SpotAngle = DirectX::XMConvertToRadians(angle);
-    m_IsDataDirty = true;
-}
-
-float DynamicLight::GetSpotBorder() const
-{
-    return m_LightData.m_SpotBorder;
-}
-
-void DynamicLight::SetSpotBorder(float border)
-{
-    m_LightData.m_SpotBorder = border;
-    m_IsDataDirty = true;
-}
-
-const DirectX::XMFLOAT3& DynamicLight::GetColor() const
+const DirectX::XMFLOAT3& Light::GetColor() const
 {
     return m_LightData.m_Color;
 }
 
-void DynamicLight::SetColor(const DirectX::XMFLOAT3& color)
+void Light::SetColor(const DirectX::XMFLOAT3& color)
 {
     m_LightData.m_Color = color;
     m_IsDataDirty = true;
 }
 
-const DirectX::XMVECTOR& DynamicLight::GetPosition() const
+float Light::GetIntensity() const
+{
+    return m_LightData.m_Intensity;
+}
+
+void Light::SetIntensity(float intensity)
+{
+    m_LightData.m_Intensity = intensity;
+    m_IsDataDirty = true;
+}
+
+float Light::GetFalloff() const
+{
+    return m_LightData.m_Falloff;
+}
+
+void Light::SetFalloff(float falloff)
+{
+    m_LightData.m_Falloff = falloff;
+    m_IsDataDirty = true;
+}
+
+float Light::GetSpotAngle() const
+{
+    return DirectX::XMConvertToDegrees(m_LightData.m_SpotAngle);
+}
+
+void Light::SetSpotAngle(float angle)
+{
+    m_LightData.m_SpotAngle = DirectX::XMConvertToRadians(angle);
+    m_IsDataDirty = true;
+}
+
+float Light::GetSpotBorder() const
+{
+    return m_LightData.m_SpotBorder;
+}
+
+void Light::SetSpotBorder(float border)
+{
+    m_LightData.m_SpotBorder = border;
+    m_IsDataDirty = true;
+}
+
+const DirectX::XMVECTOR& Light::GetPosition() const
 {
     return m_Position;
 }
 
-void DynamicLight::Move(const DirectX::XMVECTOR& position)
+void Light::Move(const DirectX::XMVECTOR& position)
 {
     m_Position = DirectX::XMVectorAdd(m_Position, position);
 }
 
-const DirectX::XMVECTOR& DynamicLight::GetDirection() const
+const DirectX::XMVECTOR& Light::GetDirection() const
 {
     return m_Direction;
 }
 
-void DynamicLight::Rotate(const DirectX::XMVECTOR& axis, float angle)
+void Light::Rotate(const DirectX::XMVECTOR& axis, float angle)
 {
     DirectX::XMMATRIX rotation(DirectX::XMMatrixRotationAxis(axis, DirectX::XMConvertToRadians(angle)));
     m_Direction = DirectX::XMVector4Transform(m_Direction, rotation);
 }
 
-void DynamicLight::Enable()
+void Light::Enable()
 {
     if (m_IsDataDirty)
     {

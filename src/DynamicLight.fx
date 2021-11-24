@@ -51,9 +51,9 @@ VertexOutput Main(VertexInput input)
 
 #ifdef PIXEL_SHADER
 
-#define LIGHT_DIRECTION 0
-#define LIGHT_POINT     1
-#define LIGHT_SPOT      2
+#define LIGHT_DIRECTION 1
+#define LIGHT_POINT     2
+#define LIGHT_SPOT      3
 
 Texture2D diffuseTexture : register(t0);
 Texture2D specularTexture : register(t1);
@@ -64,11 +64,11 @@ SamplerState geometrySampler : register(s0);
 cbuffer DynamicLight : register(b0)
 {
     int dynamicLightType;
+    float3 dynamicLightColor;
+    float dynamicLightIntensity;
     float dynamicLightFalloff;
     float dynamicLightSpotAngle;
     float dynamicLightSpotBorder;
-    float3 dynamicLightColor;
-    float dynamicLightPadding;
 };
 
 cbuffer WorldVectors : register(b1)
@@ -102,7 +102,7 @@ PixelOutput Main(PixelInput input)
     float diffuseIntensity = specularSample.a;
 
     float3 pixelDiffuseColor = mul(diffuseColor, diffuseIntensity);
-    float3 lightDiffuseColor = mul(dynamicLightColor, 1.0f); // TODO
+    float3 lightDiffuseColor = mul(dynamicLightColor, dynamicLightIntensity);
     float4 combinedDiffuseColor = float4(pixelDiffuseColor * lightDiffuseColor, 1.0f);
 
     // --- Calculate specular color
@@ -111,7 +111,7 @@ PixelOutput Main(PixelInput input)
     float specularIntensity = positionSample.a;
 
     float3 pixelSpecularColor = mul(specularColor, specularIntensity);
-    float3 lightSpecularColor = mul(dynamicLightColor, 1.0f); // TODO
+    float3 lightSpecularColor = mul(dynamicLightColor, dynamicLightIntensity);
     float4 combinedSpecularColor = float4(pixelSpecularColor * lightSpecularColor, 1.0f);
 
     // --- Calculate diffuse light intensity

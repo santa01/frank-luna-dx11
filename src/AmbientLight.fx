@@ -57,10 +57,14 @@ Texture2D positionTexture : register(t2);
 Texture2D normalTexture : register(t3);
 SamplerState geometrySampler : register(s0);
 
-cbuffer AmbientLight : register(b0)
+cbuffer DynamicLight : register(b0)
 {
-    float3 ambientLightColor;
-    float ambientLightIntensity;
+    int dynamicLightType;
+    float3 dynamicLightColor;
+    float dynamicLightIntensity;
+    float dynamicLightFalloff;
+    float dynamicLightSpotAngle;
+    float dynamicLightSpotBorder;
 };
 
 struct PixelInput
@@ -82,7 +86,7 @@ PixelOutput Main(PixelInput input)
     float ambientIntensity = diffuseSample.a;
 
     float3 pixelColor = mul(diffuseColor, ambientIntensity);
-    float3 lightColor = mul(ambientLightColor, ambientLightIntensity);
+    float3 lightColor = mul(dynamicLightColor, dynamicLightIntensity);
 
     PixelOutput output;
     output.color = float4(pixelColor * lightColor, 1.0f);
