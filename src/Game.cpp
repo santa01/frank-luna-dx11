@@ -194,18 +194,19 @@ void Game::RenderGeometry(Context& context)
         shader.SetWorld(mesh->GetWorld());
         shader.UpdateTransform();
 
-        mesh->Draw(device);
+        mesh->Enable();
+        mesh->Draw();
     }
 }
 
 void Game::RenderAmbientLight(Context& context)
 {
-    DX11Device& device = context.GetDevice();
+    m_Frame->Enable();
 
     if (m_AmbientLight != nullptr)
     {
         m_AmbientLight->Enable();
-        m_Frame->Draw(device);
+        m_Frame->Draw();
     }
 }
 
@@ -216,6 +217,8 @@ void Game::RenderDynamicLight(Context& context)
     Shader& shader = device.GetDynamicLightShader();
     shader.SetCameraPosition(m_Camera->GetPosition());
 
+    m_Frame->Enable();
+
     for (auto& light : m_Lights)
     {
         shader.SetLightPosition(light->GetPosition());
@@ -223,6 +226,6 @@ void Game::RenderDynamicLight(Context& context)
         shader.UpdateVectors();
 
         light->Enable();
-        m_Frame->Draw(device);
+        m_Frame->Draw();
     }
 }

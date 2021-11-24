@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "Resource.h"
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <DirectXMath.h>
@@ -97,7 +98,7 @@ struct MeshData final
     UINT m_IndexSize{ 0 };
 };
 
-class Mesh final
+class Mesh final : public DX11Resource
 {
 public:
     Mesh(DX11Device& device, const MeshData& data);
@@ -113,7 +114,10 @@ public:
 
     const DirectX::XMMATRIX& GetWorld() const;
 
-    void Draw(DX11Device& device) const;
+    void Enable() override;
+    void Disable() override;
+
+    void Draw() const;
 
 private:
     void UpdateWorld();

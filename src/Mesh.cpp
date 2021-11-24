@@ -26,9 +26,10 @@
 #include <cassert>
 
 Mesh::Mesh(DX11Device& device, const MeshData& data)
-    : m_Indices(data.m_IndexSize / sizeof(data.m_IndexData[0]))
+    : DX11Resource(device)
+    , m_Indices(data.m_IndexSize / sizeof(data.m_IndexData[0]))
 {
-    ID3D11Device& deviceHandle = device.GetHandle();
+    ID3D11Device& deviceHandle = m_Device.GetHandle();
 
     {
         D3D11_BUFFER_DESC vertexBufferDesc{ };
@@ -100,9 +101,9 @@ const DirectX::XMMATRIX& Mesh::GetWorld() const
     return m_World;
 }
 
-void Mesh::Draw(DX11Device& device) const
+void Mesh::Enable()
 {
-    ID3D11DeviceContext& deviceContext = device.GetContext();
+    ID3D11DeviceContext& deviceContext = m_Device.GetContext();
 
     {
         ID3D11Buffer* buffers[] = { m_VertexBuffer.Get() };
@@ -113,7 +114,25 @@ void Mesh::Draw(DX11Device& device) const
         deviceContext.IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0); // Input Assembly
         deviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // Input Assembly
     }
+}
 
+void Mesh::Disable()
+{
+    ID3D11DeviceContext& deviceContext = m_Device.GetContext();
+
+    {
+        ID3D11Buffer* buffers[] = { nullptr };
+        UINT strides[] = { sizeof(Vertex) };
+        UINT offsets[] = { 0 };
+
+        deviceContext.IASetVertexBuffers(0, 1, buffers, strides, offsets); // Input Assembly
+        deviceContext.IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0); // Input Assembly
+    }
+}
+
+void Mesh::Draw() const
+{
+    ID3D11DeviceContext& deviceContext = m_Device.GetContext();
     deviceContext.DrawIndexed(m_Indices, 0, 0);
 }
 
