@@ -149,50 +149,6 @@ void Game::Update(Context& context)
     Render(context);
 }
 
-void Game::OnKeyDown(Context& context, unsigned int key)
-{ }
-
-void Game::OnKeyUp(Context& context, unsigned int key)
-{ }
-
-void Game::OnMouseDown(Context& context, unsigned int key)
-{
-    Window& window = context.GetWindow();
-
-    if (!m_IsLeftMouseButtonPressed && key == VK_LBUTTON)
-    {
-        window.DrawCursor(false);
-        window.LockCursor(true);
-
-        m_IsLeftMouseButtonPressed = true;
-    }
-}
-
-void Game::OnMouseUp(Context& context, unsigned int key)
-{
-    Window& window = context.GetWindow();
-
-    if (m_IsLeftMouseButtonPressed && key == VK_LBUTTON)
-    {
-        window.DrawCursor(true);
-        window.LockCursor(false);
-
-        m_IsLeftMouseButtonPressed = false;
-    }
-}
-
-void Game::OnMouseMove(Context& context, int x, int y)
-{
-    if (m_IsLeftMouseButtonPressed)
-    {
-        if (x != 0)
-            m_Camera->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, static_cast<float>(x) * 0.25f);
-
-        if (y != 0)
-            m_Camera->Rotate(m_Camera->GetRight(), static_cast<float>(y) * 0.25f);
-    }
-}
-
 void Game::Render(Context& context)
 {
     m_GeometryBuffer->Enable();
@@ -253,4 +209,49 @@ void Game::Render(Context& context)
     m_GeometryBuffer->GetSpecularTexture().Disable();
     m_GeometryBuffer->GetPositionTexture().Disable();
     m_GeometryBuffer->GetNormalTexture().Disable();
+}
+
+
+void Game::OnKeyDown(Context& context, unsigned int key)
+{ }
+
+void Game::OnKeyUp(Context& context, unsigned int key)
+{ }
+
+void Game::OnMouseDown(Context& context, unsigned int key)
+{
+    Window& window = context.GetWindow();
+
+    if (!m_IsLeftMouseButtonPressed && key == VK_LBUTTON)
+    {
+        window.DrawCursor(false);
+        window.LockCursor(true);
+
+        m_IsLeftMouseButtonPressed = true;
+    }
+}
+
+void Game::OnMouseUp(Context& context, unsigned int key)
+{
+    Window& window = context.GetWindow();
+
+    if (m_IsLeftMouseButtonPressed && key == VK_LBUTTON)
+    {
+        window.DrawCursor(true);
+        window.LockCursor(false);
+
+        m_IsLeftMouseButtonPressed = false;
+    }
+}
+
+void Game::OnMouseMove(Context& context, int x, int y)
+{
+    if (m_IsLeftMouseButtonPressed)
+    {
+        if (x != 0)
+            m_Camera->Rotate({ 0.0f, 1.0f, 0.0f, 0.0f }, static_cast<float>(x) * 0.25f);
+
+        if (y != 0)
+            m_Camera->Rotate(m_Camera->GetRight(), static_cast<float>(y) * 0.25f);
+    }
 }
