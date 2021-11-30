@@ -28,6 +28,18 @@ void Game::Start(Context& context)
     Window& window = context.GetWindow();
     DX11Device& device = context.GetDevice();
 
+    m_GeometryBuffer.reset(new GeometryBuffer(device));
+    m_FrameBuffer.reset(new FrameBuffer(device));
+
+    m_GeometryShader.reset(new Shader(device, "Geometry.fx"));
+    m_GeometryShader->SetSampler(0, D3D11_FILTER_ANISOTROPIC);
+
+    m_AmbientLightShader.reset(new Shader(device, "AmbientLight.fx"));
+    m_AmbientLightShader->SetSampler(0, D3D11_FILTER_MIN_MAG_MIP_POINT);
+
+    m_DynamicLightShader.reset(new Shader(device, "DynamicLight.fx"));
+    m_DynamicLightShader->SetSampler(0, D3D11_FILTER_MIN_MAG_MIP_POINT);
+
     m_Camera.reset(new Camera());
     m_Camera->SetAspectRatio(window.GetAspectRatio());
 
@@ -133,6 +145,8 @@ void Game::Update(Context& context)
 
     if (keyboardState[VK_ESCAPE])
         context.Terminate();
+
+    Render(context);
 }
 
 void Game::OnKeyDown(Context& context, unsigned int key)
@@ -179,53 +193,64 @@ void Game::OnMouseMove(Context& context, int x, int y)
     }
 }
 
-void Game::RenderGeometry(Context& context)
+void Game::Render(Context& context)
 {
-    DX11Device& device = context.GetDevice();
+    m_GeometryBuffer->Enable();
 
-    Shader& shader = device.GetGeometryShader();
-    shader.SetViewProjection(DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection()));
-
-    m_Material->Enable();
-    m_Texture->Enable();
-
-    for (auto& mesh : m_Meshes)
     {
-        shader.SetWorld(mesh->GetWorld());
-        shader.UpdateTransform();
+        m_GeometryShader->Enable();
+        m_GeometryShader->SetViewProjection(DirectX::XMMatrixMultiply(m_Camera->GetView(), m_Camera->GetProjection()));
 
-        mesh->Enable();
-        mesh->Draw();
+        m_Material->Enable();
+        m_Texture->Enable();
+
+        for (auto& mesh : m_Meshes)
+        {
+            m_GeometryShader->SetWorld(mesh->GetWorld());
+            m_GeometryShader->UpdateTransform();
+
+            mesh->Enable();
+            mesh->Draw();
+        }
     }
-}
 
-void Game::RenderAmbientLight(Context& context)
-{
+    m_GeometryBuffer->Disable();
+
+    m_FrameBuffer->Enable();
     m_Frame->Enable();
 
-    if (m_AmbientLight != nullptr)
+    m_GeometryBuffer->GetDiffuseTexture().Enable();
+    m_GeometryBuffer->GetSpecularTexture().Enable();
+    m_GeometryBuffer->GetPositionTexture().Enable();
+    m_GeometryBuffer->GetNormalTexture().Enable();
+
     {
-        m_AmbientLight->Enable();
-        m_Frame->Draw();
+        m_AmbientLightShader->Enable();
+
+        if (m_AmbientLight != nullptr)
+        {
+            m_AmbientLight->Enable();
+            m_Frame->Draw();
+        }
     }
-}
 
-void Game::RenderDynamicLight(Context& context)
-{
-    DX11Device& device = context.GetDevice();
-
-    Shader& shader = device.GetDynamicLightShader();
-    shader.SetCameraPosition(m_Camera->GetPosition());
-
-    m_Frame->Enable();
-
-    for (auto& light : m_Lights)
     {
-        shader.SetLightPosition(light->GetPosition());
-        shader.SetLightDirection(light->GetDirection());
-        shader.UpdateVectors();
+        m_DynamicLightShader->Enable();
+        m_DynamicLightShader->SetCameraPosition(m_Camera->GetPosition());
 
-        light->Enable();
-        m_Frame->Draw();
+        for (auto& light : m_Lights)
+        {
+            m_DynamicLightShader->SetLightPosition(light->GetPosition());
+            m_DynamicLightShader->SetLightDirection(light->GetDirection());
+            m_DynamicLightShader->UpdateVectors();
+
+            light->Enable();
+            m_Frame->Draw();
+        }
     }
+
+    m_GeometryBuffer->GetDiffuseTexture().Disable();
+    m_GeometryBuffer->GetSpecularTexture().Disable();
+    m_GeometryBuffer->GetPositionTexture().Disable();
+    m_GeometryBuffer->GetNormalTexture().Disable();
 }

@@ -31,9 +31,6 @@ public:
 
     virtual void Start(Context& context);
     virtual void Shutdown(Context& context);
-    virtual void Update(Context& context);
 
-    virtual void RenderGeometry(Context& context) = 0;
-    virtual void RenderAmbientLight(Context& context) = 0;
-    virtual void RenderDynamicLight(Context& context) = 0;
+    virtual void Update(Context& context) = 0;
 };

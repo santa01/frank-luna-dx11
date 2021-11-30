@@ -23,6 +23,8 @@
 #pragma once
 
 #include "Application.h"
+#include "RenderTarget.h"
+#include "Shader.h"
 #include "Camera.h"
 #include "Mesh.h"
 #include "Material.h"
@@ -38,7 +40,9 @@ class Game final : public Application
 public:
     void Start(Context& context) override;
     void Shutdown(Context& context) override;
+
     void Update(Context& context) override;
+    void Render(Context& context);
 
     void OnKeyDown(Context& context, unsigned int key);
     void OnKeyUp(Context& context, unsigned int key);
@@ -46,11 +50,14 @@ public:
     void OnMouseUp(Context& context, unsigned int key);
     void OnMouseMove(Context& context, int x, int y);
 
-    void RenderGeometry(Context& context) override;
-    void RenderAmbientLight(Context& context) override;
-    void RenderDynamicLight(Context& context) override;
-
 private:
+    std::unique_ptr<GeometryBuffer> m_GeometryBuffer;
+    std::unique_ptr<FrameBuffer> m_FrameBuffer;
+
+    std::unique_ptr<Shader> m_GeometryShader;
+    std::unique_ptr<Shader> m_AmbientLightShader;
+    std::unique_ptr<Shader> m_DynamicLightShader;
+
     std::unique_ptr<Camera> m_Camera;
     std::unique_ptr<Material> m_Material;
     std::unique_ptr<ImageTexture> m_Texture;

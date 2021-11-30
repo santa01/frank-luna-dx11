@@ -28,6 +28,3 @@ void Application::Start(Context& context)
 
 void Application::Shutdown(Context& context)
 { }
-
-void Application::Update(Context& context)
-{ }

@@ -80,18 +80,6 @@ DX11Device::DX11Device(Context& context)
         hr = pIDXGIFactory2->MakeWindowAssociation(window.GetHandle(), DXGI_MWA_NO_WINDOW_CHANGES);
         assert(SUCCEEDED(hr));
     }
-
-    m_GeometryBuffer.reset(new GeometryBuffer(*this));
-    m_FrameBuffer.reset(new FrameBuffer(*this));
-
-    m_GeometryShader.reset(new Shader(*this, "Geometry.fx"));
-    m_GeometryShader->SetSampler(0, D3D11_FILTER_ANISOTROPIC);
-
-    m_AmbientLightShader.reset(new Shader(*this, "AmbientLight.fx"));
-    m_AmbientLightShader->SetSampler(0, D3D11_FILTER_MIN_MAG_MIP_POINT);
-
-    m_DynamicLightShader.reset(new Shader(*this, "DynamicLight.fx"));
-    m_DynamicLightShader->SetSampler(0, D3D11_FILTER_MIN_MAG_MIP_POINT);
 }
 
 ID3D11Device& DX11Device::GetHandle() const
@@ -109,22 +97,7 @@ IDXGISwapChain1& DX11Device::GetSwapChain() const
     return *m_D3D11SwapChain1.Get();
 }
 
-Shader& DX11Device::GetGeometryShader() const
-{
-    return *m_GeometryShader.get();
-}
-
-Shader& DX11Device::GetAmbientLightShader() const
-{
-    return *m_AmbientLightShader.get();
-}
-
-Shader& DX11Device::GetDynamicLightShader() const
-{
-    return *m_DynamicLightShader.get();
-}
-
-void DX11Device::GeometryBegin(Context& context)
+void DX11Device::Begin(Context& context)
 {
     Window& window = context.GetWindow();
 
@@ -137,44 +110,10 @@ void DX11Device::GeometryBegin(Context& context)
 
         m_D3D11DeviceContext->RSSetViewports(1, &viewport); // Rasterizer Stage
     }
-
-    m_GeometryShader->Enable();
-    m_GeometryBuffer->Enable();
 }
 
-void DX11Device::GeometryEnd(Context& context)
+void DX11Device::End(Context & context)
 {
-    m_GeometryBuffer->Disable();
-}
-
-void DX11Device::AmbientLightBegin(Context& context)
-{
-    m_GeometryBuffer->GetDiffuseTexture().Enable();
-    m_GeometryBuffer->GetSpecularTexture().Enable();
-    m_GeometryBuffer->GetPositionTexture().Enable();
-    m_GeometryBuffer->GetNormalTexture().Enable();
-
-    m_AmbientLightShader->Enable();
-    m_FrameBuffer->Enable();
-}
-
-void DX11Device::AmbientLightEnd(Context& context)
-{ }
-
-void DX11Device::DynamicLightBegin(Context& context)
-{
-    m_DynamicLightShader->Enable();
-}
-
-void DX11Device::DynamicLightEnd(Context& context)
-{
-    m_GeometryBuffer->GetDiffuseTexture().Disable();
-    m_GeometryBuffer->GetSpecularTexture().Disable();
-    m_GeometryBuffer->GetPositionTexture().Disable();
-    m_GeometryBuffer->GetNormalTexture().Disable();
-
-    m_FrameBuffer->Disable();
-
     DXGI_PRESENT_PARAMETERS params{ };
     m_D3D11SwapChain1->Present1(0, 0, &params);
 }

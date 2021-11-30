@@ -22,12 +22,9 @@
 
 #pragma once
 
-#include "RenderTarget.h"
-#include "Shader.h"
 #include <d3d11.h>
 #include <dxgi1_2.h>
 #include <wrl/client.h>
-#include <memory>
 
 class Context;
 
@@ -40,26 +37,11 @@ public:
     ID3D11DeviceContext& GetContext() const;
     IDXGISwapChain1& GetSwapChain() const;
 
-    Shader& GetGeometryShader() const;
-    Shader& GetAmbientLightShader() const;
-    Shader& GetDynamicLightShader() const;
-
-    void GeometryBegin(Context& context);
-    void GeometryEnd(Context& context);
-    void AmbientLightBegin(Context& context);
-    void AmbientLightEnd(Context& context);
-    void DynamicLightBegin(Context& context);
-    void DynamicLightEnd(Context& context);
+    void Begin(Context& context);
+    void End(Context& context);
 
 private:
     Microsoft::WRL::ComPtr<ID3D11Device> m_D3D11Device;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_D3D11DeviceContext;
     Microsoft::WRL::ComPtr<IDXGISwapChain1> m_D3D11SwapChain1;
-
-    std::unique_ptr<GeometryBuffer> m_GeometryBuffer;
-    std::unique_ptr<FrameBuffer> m_FrameBuffer;
-
-    std::unique_ptr<Shader> m_GeometryShader;
-    std::unique_ptr<Shader> m_AmbientLightShader;
-    std::unique_ptr<Shader> m_DynamicLightShader;
 };
